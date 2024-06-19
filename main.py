@@ -44,16 +44,16 @@ def getTile(pos):
     '''
     takes an xy pixel position and returns an xy of the tile that location resides in
     '''
-    tilex = pos[0] // TILEWIDTH
-    tiley = pos[1] // TILEWIDTH
-    return (tilex, tiley)
+    tileRow = pos[1] // TILEWIDTH
+    tileCol = pos[0] // TILEWIDTH
+    return (tileRow, tileCol)
 
 def tileToPixel(tileCoord):
     '''
     takes a tile x,y and spits out a pixel x,y for the top left of that tile
     '''
-    pixelx = tileCoord[0] * TILEWIDTH
-    pixely = tileCoord[1] * TILEWIDTH
+    pixelx = tileCoord[1] * TILEWIDTH
+    pixely = tileCoord[0] * TILEWIDTH
     return (pixelx, pixely)
 
 def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
@@ -109,6 +109,8 @@ while running:
 
     #drawMap(tileGrid, tileDict)
     bigMap.draw(screen)
+    #bigMap.drawDebug(screen)
+    bigMap.drawAdjTile(screen, getTile(imgrect.center))
     screen.blit(image, imgrect)
     #render the game
     clock.tick(60)

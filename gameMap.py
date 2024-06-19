@@ -1,6 +1,7 @@
 from utility import *
 
 IMG_SCALE = 3
+DEBUG = True
 
 class GameMap:
     def __init__(self, manifestName: str, mapName: str):
@@ -50,10 +51,10 @@ class GameMap:
         '''
         create the adjacency list
         '''
-        self.adjList = {}
+        self.adjList: dict[tuple[int, int], list[tuple[int, int]] ] = {}
         for rowNum, row in enumerate(self.tileMap):
             for colNum, tile in enumerate(row):
-                tileAdjacencies = [] # this dict maps from coord tuple, to list of adjacencies for each tile.
+                tileAdjacencies: list[tuple[int, int]] = [] # this dict maps from coord tuple, to list of adjacencies for each tile.
                 if navMap[tile] == "no": # break if tile non navigable
                     self.adjList[(rowNum, colNum)] = tileAdjacencies
                     continue
@@ -80,9 +81,26 @@ class GameMap:
          '''
          for rowNum, row in enumerate(self.tileMap):
               for colNum, tile in enumerate(row):
-                   pass
                    pos = (colNum*self.TILE_WIDTH, rowNum*self.TILE_WIDTH)
                    screen.blit(self.textureMap[tile][0], pos)
+    
+    def drawDebug(self, screen: pg.Surface):
+        #this is just a stopgap measure. Should not be loading images every call.
+        redX = load_image("redX.png", scale=IMG_SCALE)
+        greenMarker = load_image("greenMarker.png", scale=IMG_SCALE)
+
+        for rowNum, row in enumerate(self.tileMap):
+              for colNum, tile in enumerate(row):
+                    pos = (colNum*self.TILE_WIDTH, rowNum*self.TILE_WIDTH)
+                    if self.navMap[tile] == "no":
+                        screen.blit(redX[0], pos)
+                    elif self.navMap[tile] == "yes":
+                        screen.blit(greenMarker[0], pos)
+    
+    def drawAdjTile(self, screen, tile: tuple[int, int]):
+        greenMarker = load_image("greenMarker.png", scale=IMG_SCALE)
+        for tile in self.adjList[tile]:
+            screen.blit(greenMarker[0], (tile[1]*self.TILE_WIDTH, tile[0]*self.TILE_WIDTH))
 # def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
 #     '''
 #     reads in list of number that correspond to different tiles
