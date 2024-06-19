@@ -99,14 +99,16 @@ running = True
 
 #MARK: Main game loop
 while running:
+    screen.fill("black")
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == pg.BUTTON_LEFT:
                 imgrect.topleft = tileToPixel(getTile(event.pos))
-    screen.fill("black")
-    drawMap(tileGrid, tileDict)
+
+    #drawMap(tileGrid, tileDict)
+    bigMap.draw(screen)
     screen.blit(image, imgrect)
     #render the game
     clock.tick(60)

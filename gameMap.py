@@ -1,5 +1,7 @@
 from utility import *
 
+IMG_SCALE = 3
+
 class GameMap:
     def __init__(self, manifestName: str, mapName: str):
         '''
@@ -15,14 +17,15 @@ class GameMap:
                 line = line.strip('\n')
                 line = line.split(',')
                 #load image and imagerect
-                newImgTuple = load_image(line[1], scale=3)
+                newImgTuple = load_image(line[1], scale=IMG_SCALE)
+                self.TILE_WIDTH = newImgTuple[1].width
                 #store image and imagerect in the map at the character specified
                 textureMap[line[0]] = newImgTuple
                 navMap[line[0]] = line[2]
             # contains map of {tileSymbol -> (imageSurface, imageRect)}
-            self.textureMap = textureMap
+            self.textureMap: dict[str, tuple[pg.Surface, pg.Rect]] = textureMap
             # contains map from {tileSymbol -> (yes/no navigable)}
-            self.navMap = navMap
+            self.navMap: dict[str, str] = navMap
 
         '''
         takes file name and loads csv map into grid
@@ -35,11 +38,11 @@ class GameMap:
                 line = line.split(",")
                 grid.append(line)
             # contains grid of all the symbols in the map
-            self.tileMap = grid
+            self.tileMap: list[list[str]] = grid
             # get height and width from the tilemap we just made
             print("we still need to validate csv inputs. height, width, and map may be broken")
-            self.height = len(self.tileMap)
-            self.width = len(self.tileMap[0])
+            self.height: int = len(self.tileMap)
+            self.width: int = len(self.tileMap[0])
 
         print(self.tileMap)
         print(self.textureMap)
@@ -68,6 +71,18 @@ class GameMap:
                             tileAdjacencies.append((rowNum, colNum+1))
                 self.adjList[(rowNum, colNum)] = tileAdjacencies
         print(self.adjList)
+    
+    
+    def draw(self, screen: pg.Surface):
+         '''
+         takes pygame screen as parameter
+         uses texturemap and tilemap to blit all tiles to screen
+         '''
+         for rowNum, row in enumerate(self.tileMap):
+              for colNum, tile in enumerate(row):
+                   pass
+                   pos = (colNum*self.TILE_WIDTH, rowNum*self.TILE_WIDTH)
+                   screen.blit(self.textureMap[tile][0], pos)
 # def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
 #     '''
 #     reads in list of number that correspond to different tiles
