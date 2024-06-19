@@ -33,11 +33,11 @@ def load_image(name, colorkey=None, scale=1):
 tile, tilerect = load_image("16grass1.png", scale=3)
 TILEWIDTH = tilerect.width
 
-def printGrassMask(bitMap):
-    for rowNum, row in enumerate(bitMap):
+def drawMap(mapGrid, tileDict):
+    for rowNum, row in enumerate(mapGrid):
         for itemNum, item in enumerate(row):
-            if item == '1':
-                screen.blit(tile, (itemNum * tilerect.width, rowNum * tilerect.height))
+            tileDict[item][1].topleft = tileToPixel((itemNum, rowNum))
+            screen.blit(tileDict[item][0], tileDict[item][1])
 
 def loadMap(name):
     mapPath = os.path.join(data_dir, name)
@@ -65,10 +65,32 @@ def tileToPixel(tileCoord):
     pixely = tileCoord[1] * TILEWIDTH
     return (pixelx, pixely)
 
+def readManifest(name):
+    '''
+    reads in list of number that correspond to different tiles
+    creates one image for each tile type
+    maps '''
+    manifestPath = os.path.join(data_dir, name)
+    with open(manifestPath) as fileIn:
+        lines = fileIn.readlines()
+        tileMap = {}
+        for line in lines:
+            line = line.strip('\n')
+            line = line.split(',')
+            #load image and imagerect
+            newImgTuple = load_image(line[1], scale=3)
+            #store image and imagerect in the map at the character specified
+            tileMap[line[0]] = newImgTuple
+        return tileMap
+            
+tileDict = readManifest("manifest.csv")
 tileGrid = loadMap("testmap.csv")
-print(tileGrid)
-image, imgrect = load_image("16BasicguyWider.png", scale = 3)
+#imgFile = "vectorTransparent.png"
+imgFile = "16BasicguyWider.png"
+image, imgrect = load_image(imgFile, scale = 3)
 running = True
+
+#MARK: Main game loop
 while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -77,7 +99,7 @@ while running:
             if event.button == pg.BUTTON_LEFT:
                 imgrect.topleft = tileToPixel(getTile(event.pos))
     screen.fill("black")
-    printGrassMask(tileGrid)
+    drawMap(tileGrid, tileDict)
     screen.blit(image, imgrect)
     #render the game
     clock.tick(60)
