@@ -3,7 +3,7 @@ import os
 import pygame as pg
 
 from utility import *
-
+from GameMap import *
 
 pg.init()
 WIN_WIDTH = 1280
@@ -19,27 +19,15 @@ player_pos = pg.Vector2(WIN_WIDTH/2, WIN_HEIGHT/2)
 tile, tilerect = load_image("16grass1.png", scale=3)
 TILEWIDTH = tilerect.width
 
-def drawMap(mapGrid, tileDict):
+def drawMap(grid, tileDict):
     '''
     takes mapGrid and tileDict to draw map to screen
     '''
-    for rowNum, row in enumerate(mapGrid):
+    for rowNum, row in enumerate(grid):
         for itemNum, item in enumerate(row):
             tileDict[item][1].topleft = tileToPixel((itemNum, rowNum))
             screen.blit(tileDict[item][0], tileDict[item][1])
 
-def loadMap(name):
-    '''
-    takes file name and loads csv map into grid
-    '''
-    mapPath = os.path.join(data_dir, name)
-    with open(mapPath) as file_in:
-        grid = []
-        for line in file_in.readlines():
-            line = line.strip('\n')
-            line = line.split(",")
-            grid.append(line)
-    return grid
 
 def gedAdjList(grid):
     '''
@@ -85,9 +73,24 @@ def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
             #store image and imagerect in the map at the character specified
             tileMap[line[0]] = newImgTuple
         return tileMap
+
+
+def loadMap(name):
+    '''
+    takes file name and loads csv map into grid
+    '''
+    mapPath = os.path.join(data_dir, name)
+    with open(mapPath) as file_in:
+        grid = []
+        for line in file_in.readlines():
+            line = line.strip('\n')
+            line = line.split(",")
+            grid.append(line)
+    return grid
             
 tileDict = readManifest("manifest.csv")
 tileGrid = loadMap("testmap.csv")
+bigMap = GameMap("manifest.csv", "testmap.csv")
 print(tileGrid)
 #imgFile = "vectorTransparent.png"
 imgFile = "16guySmaller.png"
