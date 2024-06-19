@@ -1,8 +1,9 @@
-import pygame as pg
 import os
 
-main_dir = os.path.split(os.path.abspath(__file__))[0]
-data_dir = os.path.join(main_dir, "data")
+import pygame as pg
+
+from utility import *
+
 
 pg.init()
 WIN_WIDTH = 1280
@@ -12,34 +13,25 @@ screen = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 clock = pg.time.Clock()
 dt = 0
 player_pos = pg.Vector2(WIN_WIDTH/2, WIN_HEIGHT/2)
-'''
-returns image, imgrect for the image that is specified
-'''
-def load_image(name, colorkey=None, scale=1):
-    fullname = os.path.join(data_dir, name)
-    image = pg.image.load(fullname)
 
-    size = image.get_size()
-    size = (size[0] * scale, size[1] * scale)
-    image = pg.transform.scale(image, size)
 
-    image = image.convert_alpha()
-    if colorkey is not None:
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey, pg.RLEACCEL)
-    return image, image.get_rect()
 
 tile, tilerect = load_image("16grass1.png", scale=3)
 TILEWIDTH = tilerect.width
 
 def drawMap(mapGrid, tileDict):
+    '''
+    takes mapGrid and tileDict to draw map to screen
+    '''
     for rowNum, row in enumerate(mapGrid):
         for itemNum, item in enumerate(row):
             tileDict[item][1].topleft = tileToPixel((itemNum, rowNum))
             screen.blit(tileDict[item][0], tileDict[item][1])
 
 def loadMap(name):
+    '''
+    takes file name and loads csv map into grid
+    '''
     mapPath = os.path.join(data_dir, name)
     with open(mapPath) as file_in:
         grid = []
@@ -49,6 +41,17 @@ def loadMap(name):
             grid.append(line)
     return grid
 
+def gedAdjList(grid):
+    '''
+    takes in the grid of tiles and produces adjacency grid for that map
+    '''
+    adjList = []
+    for i in range(len(grid)): #iterate over height
+        for j in range(len(grid[i])): #iterate over width
+            if grid[i][j] != 0:
+                return
+
+            
 def getTile(pos):
     '''
     takes an xy pixel position and returns an xy of the tile that location resides in
@@ -65,7 +68,7 @@ def tileToPixel(tileCoord):
     pixely = tileCoord[1] * TILEWIDTH
     return (pixelx, pixely)
 
-def readManifest(name):
+def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
     '''
     reads in list of number that correspond to different tiles
     creates one image for each tile type
@@ -85,8 +88,9 @@ def readManifest(name):
             
 tileDict = readManifest("manifest.csv")
 tileGrid = loadMap("testmap.csv")
+print(tileGrid)
 #imgFile = "vectorTransparent.png"
-imgFile = "16BasicguyWider.png"
+imgFile = "16guySmaller.png"
 image, imgrect = load_image(imgFile, scale = 3)
 running = True
 
