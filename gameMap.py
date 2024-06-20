@@ -101,6 +101,8 @@ class GameMap:
         greenMarker = load_image("greenMarker.png", scale=IMG_SCALE)
         for tile in self.adjList[tile]:
             screen.blit(greenMarker[0], (tile[1]*self.TILE_WIDTH, tile[0]*self.TILE_WIDTH))
+    #write a bfs/dfs to find the shortest path to 1 points OR all points within a certain distance so that i can display them on screen
+    
 # def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
 #     '''
 #     reads in list of number that correspond to different tiles
