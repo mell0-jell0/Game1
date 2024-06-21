@@ -2,6 +2,7 @@ import os
 
 import pygame as pg
 
+IMG_SCALE = 3
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, "data")
 

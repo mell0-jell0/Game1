@@ -1,0 +1,7 @@
+weapon,shortHit,shortCrit,medHit,medCrit,longHit,longCrit,hitDamage,critDamage,maxAttacks
+assault rifle,8,15,7,14,9,16,3,5,3
+sniper rifle,9,16,8,15,6,13,6,10,1
+shotgun,6,12,7,17,9,18,4,5,3
+smg,7,14,8,15,10,17,2,4,4
+pistol,7,14,8,15,10,17,2,4,3
+bow,7,14,8,15,10,17,7,10,1
