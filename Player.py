@@ -1,13 +1,14 @@
 from utility import *
 
-class Player:
-    def __init__(self, health, weapon, imgName) -> None:
+class Player(pg.sprite.Sprite):
+    def __init__(self, imgName, health, weapon) -> None:
+        pg.sprite.Sprite.__init__(self)
         self.health = health
         self.weapon = weapon
-        self.img, self.rect = load_image(imgName, scale=IMG_SCALE)
+        self.image, self.rect = load_image(imgName, scale=IMG_SCALE)
 
     def draw(self, screen: pg.Surface):
         '''
         takes in screen and draws player to the location
         '''
-        screen.blit(self.img, self.rect)
+        screen.blit(self.image, self.rect)
