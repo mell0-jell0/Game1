@@ -26,9 +26,12 @@ class TurnController:
     def __init__(self, screen: pg.Surface, player: Player) -> None:
         self.player = player
         self.isPlayerTurn = True
-        #self.UIBox = pg.Surface(screen.get_size())
+        #self.UIBox = pg.Surface(screen.get_size()) #might use for building ui in one surface and blitting all at once / for resizing
         self.nextTurnButton = Button("End Turn")
         self.nextTurnButton.rect.bottomleft = screen.get_rect().bottomleft
+        self.turnIndicator = Button("Player's Turn")
+        self.turnIndicator.rect.topright = screen.get_rect().topright
+
         self.lastClickedTile: tuple[int, int] = (-1,-1)
         self.clickedTileMarker = load_image("moveIndicator1.png") #perhaps rename to moveTileMarker
         self.crossHairTile: tuple[int, int] = (-1,-1)
@@ -42,6 +45,7 @@ class TurnController:
         draws basic turn ui onto the screen
         '''
         screen.blit(self.nextTurnButton.image, self.nextTurnButton.rect)
+        screen.blit(self.turnIndicator.image, self.turnIndicator.rect)
         #if the player has clicked on a tile show that
         if self.lastClickedTile != (-1, -1):
             screen.blit(*self.clickedTileMarker) #star unpacks tuple into arguments (in case i forget)
