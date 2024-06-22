@@ -3,7 +3,11 @@ from Player import *
 from BasicEnemy import *
 
 pg.font.init()
+
 class Button(pg.sprite.Sprite):
+    '''
+    basic class for keeping track of button images and rects (for click detection and drawing)
+    '''
     BUTTON_WIDTH = 80
     BUTTON_HEIGHT = 30
     textWriter = pg.font.Font(pg.font.get_default_font(), BUTTON_HEIGHT)
@@ -33,3 +37,6 @@ class TurnController:
             return True
         else:
             return False
+        '''
+        if the player clicks on a tile, check if that is a legal move and if it is, tell them how much it will cost
+        if the player clicks on an enemy, tell them what range, and draw line to the enemy'''

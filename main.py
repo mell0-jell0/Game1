@@ -71,6 +71,7 @@ while running:
             if turnController.handleClick(event.pos):
                 print("handled click")
             else:
+                print(bigMap.calcDistance(getTile(player.rect.center), getTile(event.pos)))
                 player.rect.topleft = tileToPixel(getTile(event.pos))
 
     #drawMap(tileGrid, tileDict)

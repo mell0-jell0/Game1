@@ -1,3 +1,4 @@
+from collections import deque
 from utility import *
 
 IMG_SCALE = 3
@@ -103,6 +104,21 @@ class GameMap:
             screen.blit(greenMarker[0], (tile[1]*self.TILE_WIDTH, tile[0]*self.TILE_WIDTH))
     #write a bfs/dfs to find the shortest path to 1 points OR all points within a certain distance so that i can display them on screen
     
+    def calcDistance(self, source: tuple[int, int], target: tuple[int, int]) -> int:
+        toVisit = deque([source]) #basic bfs queue
+        visited = set() #keep track of what we already visited
+        parents = {} #track parent pointers for pathing later
+        distance: dict[tuple[int, int], int] = {source: 0}
+
+        while True:
+            currTile = toVisit.pop() # get the next thing to visit
+            for tile in self.adjList[currTile]: #update all the newly discovered tiles if applicable
+                if tile not in visited:
+                    parents[tile] = currTile
+                    toVisit.appendleft(tile) #add the tile to the list if it hasn't been explored
+                    distance[tile] = distance[currTile] + 1 #update the distance
+            visited.add(currTile)
+            if currTile == target: return distance[currTile]
 # def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
 #     '''
 #     reads in list of number that correspond to different tiles
