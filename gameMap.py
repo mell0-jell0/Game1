@@ -5,11 +5,15 @@ IMG_SCALE = 3
 DEBUG = True
 
 class GameMap:
+    '''
+    reads the manifest and csv, loads in tile textures, and handles the underlying pathing of the map
+    '''
     def __init__(self, manifestName: str, mapName: str):
         '''
         reads in list of number that correspond to different tiles
         creates one image for each tile type
-        maps '''
+        maps
+        '''
         manifestPath = os.path.join(data_dir, manifestName)
         with open(manifestPath) as fileIn:
             lines = fileIn.readlines()
@@ -46,6 +50,7 @@ class GameMap:
             self.height: int = len(self.tileMap)
             self.width: int = len(self.tileMap[0])
 
+        self.rect = pg.Rect(0, 0, self.width * self.TILE_WIDTH, self.height * self.TILE_WIDTH) #rect containing map area
         print(self.tileMap)
         print(self.textureMap)
 
@@ -74,6 +79,21 @@ class GameMap:
                 self.adjList[(rowNum, colNum)] = tileAdjacencies
         print(self.adjList)
     
+    def getTile(self, pos):
+        '''
+        takes an xy pixel position and returns an xy of the tile that location resides in
+        '''
+        tileRow = pos[1] // self.TILE_WIDTH
+        tileCol = pos[0] // self.TILE_WIDTH
+        return (tileRow, tileCol)
+
+    def tileToPixel(self, tileCoord):
+        '''
+        takes a tile x,y and spits out a pixel x,y for the top left of that tile
+        '''
+        pixelx = tileCoord[1] * self.TILE_WIDTH
+        pixely = tileCoord[0] * self.TILE_WIDTH
+        return (pixelx, pixely)
     
     def draw(self, screen: pg.Surface):
          '''
@@ -105,12 +125,16 @@ class GameMap:
     #write a bfs/dfs to find the shortest path to 1 points OR all points within a certain distance so that i can display them on screen
     
     def calcDistance(self, source: tuple[int, int], target: tuple[int, int]) -> int:
+        '''
+        uses BFS to calculate distance between source and target tiles. Handles non-navigable tiles but not cover yet
+        returns 100 000 if no path is found'''
         toVisit = deque([source]) #basic bfs queue
         visited = set() #keep track of what we already visited
         parents = {} #track parent pointers for pathing later
         distance: dict[tuple[int, int], int] = {source: 0}
 
         while True:
+            if len(toVisit) == 0: return 100000
             currTile = toVisit.pop() # get the next thing to visit
             for tile in self.adjList[currTile]: #update all the newly discovered tiles if applicable
                 if tile not in visited:

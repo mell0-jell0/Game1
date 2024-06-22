@@ -6,7 +6,10 @@ IMG_SCALE = 3
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, "data")
 
-def load_image(name, colorkey=None, scale=1):
+'''
+contains basic functionality that multiple modules would need besides pygame
+'''
+def load_image(name, colorkey=None, scale=IMG_SCALE):
     '''
     returns image, imgrect for the image that is specified
     '''

@@ -1,6 +1,9 @@
 from utility import *
 
 class Player(pg.sprite.Sprite):
+    '''
+    handles basic player character functionality such as health, the sprite, and inventory
+    '''
     def __init__(self, imgName, health, weapon) -> None:
         pg.sprite.Sprite.__init__(self)
         self.health = health
