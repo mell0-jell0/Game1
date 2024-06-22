@@ -10,7 +10,6 @@ from TurnController import *
 pg.init()
 WIN_WIDTH = 1280
 WIN_HEIGHT = 720
-TILEWIDTH = 20
 screen = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 clock = pg.time.Clock()
 dt = 0
@@ -24,6 +23,7 @@ player = Player("16guySmaller.png", 10, "placeholder")
 turnController = TurnController(screen, player)
 enemy1 = BasicEnemy("basicEnemy.png")
 enemy1.rect.topleft = bigMap.tileToPixel((4,4))
+turnController.entities.append(enemy1)
 
 running = True
 

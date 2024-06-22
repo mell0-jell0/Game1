@@ -21,7 +21,7 @@ class Button(pg.sprite.Sprite):
 class TurnController:
     '''
     Don't know what im doing right now. this might do all the ui control, this might do the turn control, might do both.
-    might get rid of this class and move it to main. right now (6/21/24) its dooing ui and turn control.
+    might get rid of this class and move it to main. right now (6/21/24) its doing ui and turn control.
     '''
     def __init__(self, screen: pg.Surface, player: Player) -> None:
         self.player = player
@@ -30,7 +30,12 @@ class TurnController:
         self.nextTurnButton = Button("End Turn")
         self.nextTurnButton.rect.bottomleft = screen.get_rect().bottomleft
         self.lastClickedTile: tuple[int, int] = (-1,-1)
-        self.clickedTileMarker = load_image("moveIndicator1.png")
+        self.clickedTileMarker = load_image("moveIndicator1.png") #perhaps rename to moveTileMarker
+        self.crossHairTile: tuple[int, int] = (-1,-1)
+        self.crossHairMarker = load_image("crossHair1.png")
+        #self.crossHairMarker[0]
+        self.entities = [] # check to see if I should use sprite groups instead or something
+            #my current thinking is that I will check clicks to see if they are on something in the entities list, and if they are, then I will check to see if that entity is interactable and what it's interaction methods are BTW ALT + Z TOGGLES LINE WRAPPING. USEFUL FOR COMMENTS LIKE THIS
 
     def drawUI(self, screen: pg.Surface):
         '''
@@ -40,14 +45,26 @@ class TurnController:
         #if the player has clicked on a tile show that
         if self.lastClickedTile != (-1, -1):
             screen.blit(*self.clickedTileMarker) #star unpacks tuple into arguments (in case i forget)
+        if self.crossHairTile != (-1,-1):
+            screen.blit(*self.crossHairMarker)
     
     def handleClick(self, pos: tuple[float, float], gameMap: GameMap):
         #if not self.isPlayerTurn: return True
+        self.crossHairTile = (-1,-1)
 
+        #compute this bool for later
+        entityClicked = False
+        for entity in self.entities: 
+            if entity.rect.collidepoint(pos): entityClicked = True
+        
         if self.nextTurnButton.rect.collidepoint(pos): # handle clicks UI first
             self.isPlayerTurn = not self.isPlayerTurn
             return True
-        #elif clicked on enemy/item, #handle clicks on entities Just after UI
+        elif entityClicked: #handle clicks on entities Just after UI, before checking to see if the map was clicked
+            print("enemy was clicked")
+            self.crossHairTile = gameMap.getTile(pos)
+            self.crossHairMarker[1].topleft = gameMap.tileToPixel(gameMap.getTile(pos))
+            return True
         elif gameMap.rect.collidepoint(pos): #Handle clicks on Map last
             print("detected map click")
             clickedTile = gameMap.getTile(pos)
