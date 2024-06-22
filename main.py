@@ -6,7 +6,12 @@ from utility import *
 from GameMap import *
 from Player import *
 from TurnController import *
-
+'''
+ACKNOWLEDGEMENTS
+daFluffyPotato for inspiration and advice about coding
+SplatterCat for exploring the niche world of indie games and convincing me that whatever weird shit I make can be enjoyed too
+My friend A. for convincing me to get started and keeping me accountable by asking how "the game" was coming along
+'''
 pg.init()
 WIN_WIDTH = 1280
 WIN_HEIGHT = 720
