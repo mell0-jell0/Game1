@@ -9,9 +9,10 @@ class Player(pg.sprite.Sprite):
         self.health = health
         self.weapon = weapon
         self.image, self.rect = load_image(imgName, scale=IMG_SCALE)
+        self.tileLocation = (0,0)
 
-    def draw(self, screen: pg.Surface):
-        '''
-        takes in screen and draws player to the location
-        '''
-        screen.blit(self.image, self.rect)
+    # def draw(self, screen: pg.Surface, pos):
+    #     '''
+    #     takes in screen and draws player to the location
+    #     '''
+    #     screen.blit(self.image, pos)

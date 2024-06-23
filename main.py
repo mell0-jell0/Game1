@@ -19,8 +19,6 @@ screen = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 clock = pg.time.Clock()
 dt = 0
 
-tile, tilerect = load_image("16grass1.png", scale=3)
-TILEWIDTH = tilerect.width
             
 bigMap = GameMap("manifest.csv", "testmap.csv")
 
@@ -30,6 +28,8 @@ enemy1 = BasicEnemy("basicEnemy.png")
 enemy1.rect.topleft = bigMap.tileToPixel((4,4))
 turnController.entities.append(enemy1)
 
+cameraOffset = (-400,-80)
+bigMap.setOffset(cameraOffset)
 running = True
 
 #MARK: Main game loop
@@ -39,18 +39,19 @@ while running:
         if event.type == pg.QUIT:
             running = False
         if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+            # print(bigMap.getTile(event.pos))
+            # continue
             if turnController.handleClick(event.pos, bigMap):
                 print("handled click")
             else:
-                print(bigMap.calcDistance(bigMap.getTile(player.rect.center), bigMap.getTile(event.pos)))
-                player.rect.topleft = bigMap.tileToPixel(bigMap.getTile(event.pos))
+                print("no handle click")
 
     #drawMap(tileGrid, tileDict)
     bigMap.draw(screen)
     #bigMap.drawDebug(screen)
-    bigMap.drawAdjTile(screen, bigMap.getTile(player.rect.center))
-    enemy1.draw(screen)
-    player.draw(screen)
+    bigMap.drawAdjTile(screen, player.tileLocation)
+    screen.blit(enemy1.image, bigMap.tileToPixel(enemy1.tileLocation))
+    screen.blit(player.image, bigMap.tileToPixel(player.tileLocation))
     turnController.drawUI(screen)
     #render the game
     clock.tick(60)

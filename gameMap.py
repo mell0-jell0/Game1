@@ -78,21 +78,23 @@ class GameMap:
                             tileAdjacencies.append((rowNum, colNum+1))
                 self.adjList[(rowNum, colNum)] = tileAdjacencies
         print(self.adjList)
+
+        self.offset: tuple[float, float] = (0,0)
     
     def getTile(self, pos):
         '''
         takes an xy pixel position and returns an xy of the tile that location resides in
         '''
-        tileRow = pos[1] // self.TILE_WIDTH
-        tileCol = pos[0] // self.TILE_WIDTH
+        tileRow = (pos[1] + self.offset[1]) // self.TILE_WIDTH
+        tileCol = (pos[0] + self.offset[0]) // self.TILE_WIDTH
         return (tileRow, tileCol)
 
     def tileToPixel(self, tileCoord):
         '''
         takes a tile x,y and spits out a pixel x,y for the top left of that tile
         '''
-        pixelx = tileCoord[1] * self.TILE_WIDTH
-        pixely = tileCoord[0] * self.TILE_WIDTH
+        pixelx = (tileCoord[1] * self.TILE_WIDTH) - self.offset[0]
+        pixely = (tileCoord[0] * self.TILE_WIDTH) - self.offset[1]
         return (pixelx, pixely)
     
     def draw(self, screen: pg.Surface):
@@ -102,7 +104,7 @@ class GameMap:
          '''
          for rowNum, row in enumerate(self.tileMap):
               for colNum, tile in enumerate(row):
-                   pos = (colNum*self.TILE_WIDTH, rowNum*self.TILE_WIDTH)
+                   pos = (colNum*self.TILE_WIDTH - self.offset[0], rowNum*self.TILE_WIDTH - self.offset[1])
                    screen.blit(self.textureMap[tile][0], pos)
     
     def drawDebug(self, screen: pg.Surface):
@@ -112,16 +114,16 @@ class GameMap:
 
         for rowNum, row in enumerate(self.tileMap):
               for colNum, tile in enumerate(row):
-                    pos = (colNum*self.TILE_WIDTH, rowNum*self.TILE_WIDTH)
+                    pos = (colNum*self.TILE_WIDTH - self.offset[0], rowNum*self.TILE_WIDTH - self.offset[1])
                     if self.navMap[tile] == "no":
                         screen.blit(redX[0], pos)
                     elif self.navMap[tile] == "yes":
                         screen.blit(greenMarker[0], pos)
     
-    def drawAdjTile(self, screen, tile: tuple[int, int]):
+    def drawAdjTile(self, screen, target: tuple[int, int]):
         greenMarker = load_image("greenMarker.png", scale=IMG_SCALE)
-        for tile in self.adjList[tile]:
-            screen.blit(greenMarker[0], (tile[1]*self.TILE_WIDTH, tile[0]*self.TILE_WIDTH))
+        for tile in self.adjList[target]:
+            screen.blit(greenMarker[0], (tile[1]*self.TILE_WIDTH - self.offset[0], tile[0]*self.TILE_WIDTH - self.offset[1]))
     #write a bfs/dfs to find the shortest path to 1 points OR all points within a certain distance so that i can display them on screen
     
     def calcDistance(self, source: tuple[int, int], target: tuple[int, int]) -> int:
@@ -143,6 +145,10 @@ class GameMap:
                     distance[tile] = distance[currTile] + 1 #update the distance
             visited.add(currTile)
             if currTile == target: return distance[currTile]
+    
+    def setOffset(self, newVal):
+        self.offset = newVal
+        self.rect.topleft = (-1*newVal[0], -1*newVal[1])
 # def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
 #     '''
 #     reads in list of number that correspond to different tiles

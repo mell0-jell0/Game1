@@ -1,4 +1,5 @@
 import os
+import enum
 
 import pygame as pg
 
@@ -26,3 +27,9 @@ def load_image(name, colorkey=None, scale=IMG_SCALE):
             colorkey = image.get_at((0, 0))
         image.set_colorkey(colorkey, pg.RLEACCEL)
     return image, image.get_rect()
+
+
+class entityType(enum.Enum):
+    ENEMY = enum.auto()
+    OTHER = enum.auto()
+    #add interactable entities down here
