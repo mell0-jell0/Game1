@@ -10,7 +10,13 @@ class Player(pg.sprite.Sprite):
         self.weapon = weapon
         self.image, self.rect = load_image(imgName, scale=IMG_SCALE)
         self.tileLocation = (0,0)
+        self.actionPoints = 3
 
+    def attack(self, target):
+        target.health -= 3
+
+    def moveTo(self, tile: tuple[int, int]):
+        self.tileLocation = tile
     # def draw(self, screen: pg.Surface, pos):
     #     '''
     #     takes in screen and draws player to the location

@@ -23,10 +23,10 @@ dt = 0
 bigMap = GameMap("manifest.csv", "testmap.csv")
 
 player = Player("16guySmaller.png", 10, "placeholder")
-turnController = TurnController(screen, player)
+
 enemy1 = BasicEnemy("basicEnemy.png")
 enemy1.rect.topleft = bigMap.tileToPixel((4,4))
-turnController.entities.append(enemy1)
+turnController = TurnController(screen, player, [], [enemy1])
 
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
@@ -38,6 +38,9 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
+
+        if not turnController.isPlayerTurn: break #handle the enemy turn
+
         if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
             # print(bigMap.getTile(event.pos))
             # continue
