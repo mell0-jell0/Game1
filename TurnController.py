@@ -76,15 +76,17 @@ class TurnController:
             screen.blit(*self.crossHairMarker)
     
     def handleClick(self, pos: tuple[float, float], gameMap: GameMap):
-        if self.turnTakers[self.currentTurn] != self.player: return True
+        #if self.turnTakers[self.currentTurn] != self.player: return False
 
         self.shouldDrawCrossHairMarker = False
         self.shouldDrawMoveMarker = False
         ####HANDLE UI CLICKS
         if self.nextTurnButton.rect.collidepoint(pos):
             #do the next turn thing
+            self.nextTurn()
             return True
         
+        if self.turnTakers[self.currentTurn] != self.player: return False
         ####HANDLE CLICKS THAT HAPPEN OVER MAP
         elif gameMap.rect.collidepoint(pos):
             ####CHECK CLICKS ON ENTITIES
@@ -131,7 +133,10 @@ class TurnController:
         self.actionPointsIndicator.updateText(f"Action Points {newVal}")
 
     def nextTurn(self):
+        print(f"self.turnTakers is {self.turnTakers}")
+        print(f"old turnIdx was {self.currentTurn}")
         self.currentTurn = (self.currentTurn + 1) % len(self.turnTakers)
+        print(f"new turnIdx is {self.currentTurn}")
         self.turnTakers[self.currentTurn].actionPoints = 3
 
     def isPlayerTurn(self):
