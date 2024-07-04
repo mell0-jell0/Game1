@@ -25,6 +25,14 @@ class Button(pg.sprite.Sprite):
         '''
         self.image = self.textWriter.render(newVal, 1, "black", "grey")
 
+class TurnAction:
+    '''
+    class for handling different types of legal actions on a combat turn
+    keeps track of cost and handles the checks for legality and rules etc
+    '''
+    def __init__(self):
+        self.cost = 2
+
 class TurnController:
     '''
     Don't know what im doing right now. this might do all the ui control, this might do the turn control, might do both.
