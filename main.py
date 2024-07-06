@@ -26,11 +26,15 @@ player = Player("16guySmaller.png", 10, "placeholder")
 
 enemy1 = BasicEnemy("basicEnemy.png")
 enemy1.rect.topleft = bigMap.tileToPixel((4,4))
-turnController = TurnController(screen, player, [enemy1], [enemy1])
+turnController = TurnController(screen, bigMap, player, [enemy1], [enemy1])
 
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 running = True
+
+playButton = Button("Play game")
+playButton.rect.center = screen.get_rect().center
+
 
 #MARK: Main game loop
 while running:
@@ -41,21 +45,19 @@ while running:
             running = False
 
         if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
-            # print(bigMap.getTile(event.pos))
-            # continue
-            if turnController.handleClick(event.pos, bigMap):
-                print("handled click")
-            else:
-                print("no handle click")
+            if playButton.rect.collidepoint(event.pos):
+                print("play button pressed")
+                turnController.run(screen, clock)
 
-    #drawMap(tileGrid, tileDict)
-    bigMap.draw(screen)
-    #bigMap.drawDebug(screen)
-    bigMap.drawAdjTile(screen, player.tileLocation)
-    screen.blit(enemy1.image, bigMap.tileToPixel(enemy1.tileLocation))
-    screen.blit(player.image, bigMap.tileToPixel(player.tileLocation))
-    turnController.drawUI(screen)
-    #render the game
+    screen.blit(playButton.image, playButton.rect)
+    # #drawMap(tileGrid, tileDict)
+    # bigMap.draw(screen)
+    # #bigMap.drawDebug(screen)
+    # bigMap.drawAdjTile(screen, player.tileLocation)
+    # screen.blit(enemy1.image, bigMap.tileToPixel(enemy1.tileLocation))
+    # screen.blit(player.image, bigMap.tileToPixel(player.tileLocation))
+    # turnController.drawUI(screen)
+    # #render the game
     clock.tick(60)
     pg.display.flip()
 

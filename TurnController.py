@@ -42,7 +42,8 @@ class TurnController:
     UPDATE 6/23/24:
     turn controller handles the UI input and all that jazz for the player and the ai to engage in turns. it does not handles outside menu things, that will be handled in a whole separate spot probably in main. I think it makes a lot of sense to keep all the things pertinent to the procession of a round sorta in one spot like this. I can make other modules for different aspects of the game.
     '''
-    def __init__(self, screen: pg.Surface, player: Player, otherTurnTakers: list, entities: list) -> None:
+    def __init__(self, screen: pg.Surface, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
+        self.tileMap = tileMap
         self.player = player
         self.turnTakers = [self.player]
         for turnTaker in otherTurnTakers:
@@ -149,3 +150,37 @@ class TurnController:
 
     def isPlayerTurn(self):
         return self.player == self.turnTakers[self.currentTurn]
+    
+    def run(self, screen, clock):
+        running = True
+        while running:
+            screen.fill("black")
+        # figure out where to put the player turn in here
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    running = False
+
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+                    # print(bigMap.getTile(event.pos))
+                    # continue
+                    if self.handleClick(event.pos, self.tileMap):
+                        print("handled click")
+                    else:
+                        print("no handle click")
+
+            #drawMap(tileGrid, tileDict)
+            self.tileMap.draw(screen)
+            #bigMap.drawDebug(screen)
+            self.tileMap.drawAdjTile(screen, self.player.tileLocation)
+
+            #Render UI
+            self.drawUI(screen)
+
+            
+            #update player location and draw
+            self.player.rect.topleft = self.tileMap.tileToPixel(self.player.tileLocation)
+            self.player.draw(screen)
+
+            #framerate
+            clock.tick(60)
+            pg.display.flip()
