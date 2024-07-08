@@ -39,7 +39,7 @@ playButton.rect.center = screen.get_rect().center
 #MARK: Main game loop
 while running:
     screen.fill("black")
-    # figure out where to put the player turn in here
+
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
@@ -50,14 +50,7 @@ while running:
                 turnController.run(screen, clock)
 
     screen.blit(playButton.image, playButton.rect)
-    # #drawMap(tileGrid, tileDict)
-    # bigMap.draw(screen)
-    # #bigMap.drawDebug(screen)
-    # bigMap.drawAdjTile(screen, player.tileLocation)
-    # screen.blit(enemy1.image, bigMap.tileToPixel(enemy1.tileLocation))
-    # screen.blit(player.image, bigMap.tileToPixel(player.tileLocation))
-    # turnController.drawUI(screen)
-    # #render the game
+
     clock.tick(60)
     pg.display.flip()
 

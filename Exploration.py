@@ -4,36 +4,28 @@ from Player import *
 from BasicEnemy import *
 from GameMap import *
 
-pg.font.init()
+# pg.font.init()
 
-class Button(pg.sprite.Sprite):
-    '''
-    basic class for keeping track of button images and rects (for click detection and drawing)
-    '''
-    BUTTON_WIDTH = 80
-    BUTTON_HEIGHT = 30
-    textWriter = pg.font.Font(pg.font.get_default_font(), BUTTON_HEIGHT)
+# class Button(pg.sprite.Sprite):
+#     '''
+#     basic class for keeping track of button images and rects (for click detection and drawing)
+#     '''
+#     BUTTON_WIDTH = 80
+#     BUTTON_HEIGHT = 30
+#     textWriter = pg.font.Font(pg.font.get_default_font(), BUTTON_HEIGHT)
 
-    def __init__(self, text) -> None:
-        pg.sprite.Sprite.__init__(self)
-        self.image = self.textWriter.render(text, 1, "black", "grey")
-        self.rect = self.image.get_rect()
+#     def __init__(self, text) -> None:
+#         pg.sprite.Sprite.__init__(self)
+#         self.image = self.textWriter.render(text, 1, "black", "grey")
+#         self.rect = self.image.get_rect()
     
-    def updateText(self, newVal):
-        '''
-        uses static font object to render new text and updates image surface accordingly
-        '''
-        self.image = self.textWriter.render(newVal, 1, "black", "grey")
+#     def updateText(self, newVal):
+#         '''
+#         uses static font object to render new text and updates image surface accordingly
+#         '''
+#         self.image = self.textWriter.render(newVal, 1, "black", "grey")
 
-class TurnAction:
-    '''
-    class for handling different types of legal actions on a combat turn
-    keeps track of cost and handles the checks for legality and rules etc
-    '''
-    def __init__(self):
-        self.cost = 2
-
-class TurnController:
+class Exploration:
     '''
     Don't know what im doing right now. this might do all the ui control, this might do the turn control, might do both.
     might get rid of this class and move it to main. right now (6/21/24) its doing ui and turn control.
@@ -51,14 +43,14 @@ class TurnController:
         
         self.currentTurn = 0
 
-        #self.UIBox = pg.Surface(screen.get_size()) #might use for building ui in one surface and blitting all at once / for resizing
-        self.nextTurnButton = Button("End Turn")
-        self.nextTurnButton.rect.bottomleft = screen.get_rect().bottomleft
-        self.turnIndicator = Button("Player's Turn")
-        print(f"turn indicator is this many pixels wide:  {self.turnIndicator.image.get_width()}")
-        self.turnIndicator.rect.topright = screen.get_rect().topright
-        self.actionPointsIndicator = Button("Action Points: 3")
-        self.actionPointsIndicator.rect.bottomright = screen.get_rect().bottomright
+        # #self.UIBox = pg.Surface(screen.get_size()) #might use for building ui in one surface and blitting all at once / for resizing
+        # self.nextTurnButton = Button("End Turn")
+        # self.nextTurnButton.rect.bottomleft = screen.get_rect().bottomleft
+        # self.turnIndicator = Button("Player's Turn")
+        # print(f"turn indicator is this many pixels wide:  {self.turnIndicator.image.get_width()}")
+        # self.turnIndicator.rect.topright = screen.get_rect().topright
+        # self.actionPointsIndicator = Button("Action Points: 3")
+        # self.actionPointsIndicator.rect.bottomright = screen.get_rect().bottomright
 
         #MAP UI
         self.lastClickedTile: tuple[int, int] = (-1,-1)
@@ -74,10 +66,10 @@ class TurnController:
         '''
         draws basic turn ui onto the screen
         '''
-        screen.blit(self.nextTurnButton.image, self.nextTurnButton.rect)
-        screen.blit(self.turnIndicator.image, self.turnIndicator.rect)
-        self.actionPointsIndicator.updateText(f"Action Points: {self.player.actionPoints}")
-        screen.blit(self.actionPointsIndicator.image, self.actionPointsIndicator.rect)
+        # screen.blit(self.nextTurnButton.image, self.nextTurnButton.rect)
+        # screen.blit(self.turnIndicator.image, self.turnIndicator.rect)
+        # self.actionPointsIndicator.updateText(f"Action Points: {self.player.actionPoints}")
+        # screen.blit(self.actionPointsIndicator.image, self.actionPointsIndicator.rect)
         #if the player has clicked on a tile show that
         if self.shouldDrawMoveMarker:
             screen.blit(*self.clickedTileMarker) #star unpacks tuple into arguments (in case i forget)
@@ -138,18 +130,6 @@ class TurnController:
         if the player clicks on a tile, check if that is a legal move and if it is, tell them how much it will cost
         if the player clicks on an enemy, tell them what range, and draw line to the enemy
         '''
-    def updateActionPoints(self, newVal):
-        self.actionPointsIndicator.updateText(f"Action Points {newVal}")
-
-    def nextTurn(self):
-        print(f"self.turnTakers is {self.turnTakers}")
-        print(f"old turnIdx was {self.currentTurn}")
-        self.currentTurn = (self.currentTurn + 1) % len(self.turnTakers)
-        print(f"new turnIdx is {self.currentTurn}")
-        self.turnTakers[self.currentTurn].actionPoints = 3
-
-    def isPlayerTurn(self):
-        return self.player == self.turnTakers[self.currentTurn]
     
     def run(self, screen, clock):
         running = True

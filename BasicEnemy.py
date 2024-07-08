@@ -23,3 +23,6 @@ class BasicEnemy(pg.sprite.Sprite):
         pass
     # def draw(self, screen: pg.Surface, offset=(0,0)):
     #     screen.blit(self.image, self.rect)
+
+    def draw(self, screen: pg.surface.Surface):
+        screen.blit(self.image, self.rect)
