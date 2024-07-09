@@ -22,3 +22,5 @@ class Player(pg.sprite.Sprite):
     #     takes in screen and draws player to the location
     #     '''
     #     screen.blit(self.image, pos)
+    def draw(self, screen: pg.surface.Surface):
+        screen.blit(self.image, self.rect)
