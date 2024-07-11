@@ -1,0 +1,19 @@
+if popup menu active:
+	popup menu handle
+else:
+	lastClick = event.pos
+	If UI clicked: handle that click
+	If map clicked:
+		If repeat click: confirm
+	If entity clicked:
+		If repeat click: confirm
+
+
+draw all the groups
+have a group that you can add to for particle effects, indicators and so on
+
+draw entities
+draw UI
+draw
+
+handle the clicks the way I already do, but also open the inventory, if I click on an item to use in there then use it 

@@ -6,6 +6,8 @@ from utility import *
 from GameMap import *
 from Player import *
 from TurnController import *
+from States import *
+
 '''
 ACKNOWLEDGEMENTS
 daFluffyPotato for inspiration and advice about coding
@@ -35,21 +37,15 @@ running = True
 playButton = Button("Play game")
 playButton.rect.center = screen.get_rect().center
 
+currentState = StartMenu(screen)
 
 #MARK: Main game loop
 while running:
-    screen.fill("black")
-
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            running = False
-
-        if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
-            if playButton.rect.collidepoint(event.pos):
-                print("play button pressed")
-                turnController.run(screen, clock)
-
-    screen.blit(playButton.image, playButton.rect)
+    if pg.event.get(pg.QUIT):
+        running = False
+    currentState.process(pg.event.get())
+    currentState.update()
+    currentState.render()
 
     clock.tick(60)
     pg.display.flip()

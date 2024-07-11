@@ -1,10 +1,22 @@
 import math
+
+from pygame.sprite import AbstractGroup
 from utility import *
 from Player import *
 from BasicEnemy import *
 from GameMap import *
 
 pg.font.init()
+
+# class Popup(pg.sprite.Group):
+#     '''
+#     basic class for holding UI elements that go in some sort of menu that can popup. This is used with the handling stack to make cleaner UI
+#     '''
+#     def __init__(self, *sprites) -> None:
+#         super().__init__(*sprites)
+
+#     def handleClick(self, pos: tuple[int, int]):
+#         print("handleclick does nothing yet")
 
 class Button(pg.sprite.Sprite):
     '''
@@ -50,34 +62,47 @@ class TurnController:
             self.turnTakers.append(turnTaker)
         
         self.currentTurn = 0
+        
+        #stack for holding active UI elements. i.e. inventory goes on top of main game and a popup for an inventory item goes on top of that
+        self.activeElementsStack = []
 
-        #self.UIBox = pg.Surface(screen.get_size()) #might use for building ui in one surface and blitting all at once / for resizing
+        #MENU UI
+        self.UIelements = pg.sprite.Group()
+
         self.nextTurnButton = Button("End Turn")
         self.nextTurnButton.rect.bottomleft = screen.get_rect().bottomleft
+
         self.turnIndicator = Button("Player's Turn")
         print(f"turn indicator is this many pixels wide:  {self.turnIndicator.image.get_width()}")
+
         self.turnIndicator.rect.topright = screen.get_rect().topright
         self.actionPointsIndicator = Button("Action Points: 3")
         self.actionPointsIndicator.rect.bottomright = screen.get_rect().bottomright
 
+        self.inventoryButton = Button("Inventory")
+        self.inventoryButton.rect.topright = self.turnIndicator.rect.bottomright
         #MAP UI
-        self.lastClickedTile: tuple[int, int] = (-1,-1)
+        self.lastClickpos: None | tuple[int, int] = None
+
+        self.lastClickedTile = (-1, -1)
         self.clickedTileMarker = load_image("moveIndicator1.png") #perhaps rename to moveTileMarker
         self.shouldDrawMoveMarker = False
+
         self.crossHairMarker = load_image("crossHair1.png")
         self.shouldDrawCrossHairMarker = False
         #self.crossHairMarker[0]
         self.entities = entities # check to see if I should use sprite groups instead or something
             #my current thinking is that I will check clicks to see if they are on something in the entities list, and if they are, then I will check to see if that entity is interactable and what it's interaction methods are BTW ALT + Z TOGGLES LINE WRAPPING. USEFUL FOR COMMENTS LIKE THIS
 
+        self.UIelements.add((self.turnIndicator, self.actionPointsIndicator, self.inventoryButton, self.nextTurnButton))
+
     def drawUI(self, screen: pg.Surface):
         '''
         draws basic turn ui onto the screen
         '''
-        screen.blit(self.nextTurnButton.image, self.nextTurnButton.rect)
-        screen.blit(self.turnIndicator.image, self.turnIndicator.rect)
-        self.actionPointsIndicator.updateText(f"Action Points: {self.player.actionPoints}")
-        screen.blit(self.actionPointsIndicator.image, self.actionPointsIndicator.rect)
+        ####NEW WAY OF DRAWING WITH GROUPS instead of manual blits
+        self.UIelements.draw(screen)
+
         #if the player has clicked on a tile show that
         if self.shouldDrawMoveMarker:
             screen.blit(*self.clickedTileMarker) #star unpacks tuple into arguments (in case i forget)
@@ -85,10 +110,21 @@ class TurnController:
             screen.blit(*self.crossHairMarker)
     
     def handleClick(self, pos: tuple[float, float], gameMap: GameMap):
+        #check for confirmed clicks
+        #ELSE if on map or on entity set the marker
+        #ELSE IF other, clear the UI and such
+        '''does things for click, returns true if the click was handled, false if it still needs to be handled.'''
         #if self.turnTakers[self.currentTurn] != self.player: return False
-
+        if len(self.activeElementsStack) != 0:
+            #let the active element handle all the things.
+            self.activeElementsStack[-1].handleClick(self.tileMap, self.entities)
+            return
+        
+        #active elements will be sprite groups that get drawn to the screen and that have a handleClick method.
         self.shouldDrawCrossHairMarker = False
+
         self.shouldDrawMoveMarker = False
+
         ####HANDLE UI CLICKS
         if self.nextTurnButton.rect.collidepoint(pos):
             #do the next turn thing

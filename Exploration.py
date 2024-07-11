@@ -26,14 +26,6 @@ from GameMap import *
 #         self.image = self.textWriter.render(newVal, 1, "black", "grey")
 
 class Exploration:
-    '''
-    Don't know what im doing right now. this might do all the ui control, this might do the turn control, might do both.
-    might get rid of this class and move it to main. right now (6/21/24) its doing ui and turn control.
-    '''
-    '''
-    UPDATE 6/23/24:
-    turn controller handles the UI input and all that jazz for the player and the ai to engage in turns. it does not handles outside menu things, that will be handled in a whole separate spot probably in main. I think it makes a lot of sense to keep all the things pertinent to the procession of a round sorta in one spot like this. I can make other modules for different aspects of the game.
-    '''
     def __init__(self, screen: pg.Surface, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
         self.tileMap = tileMap
         self.player = player

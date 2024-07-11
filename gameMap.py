@@ -89,13 +89,16 @@ class GameMap:
         tileCol = (pos[0] + self.offset[0]) // self.TILE_WIDTH
         return (tileRow, tileCol)
 
-    def tileToPixel(self, tileCoord):
+    def tileToPixel(self, tileCoord, center=False):
         '''
         takes a tile x,y and spits out a pixel x,y for the top left of that tile
         '''
         pixelx = (tileCoord[1] * self.TILE_WIDTH) - self.offset[0]
         pixely = (tileCoord[0] * self.TILE_WIDTH) - self.offset[1]
-        return (pixelx, pixely)
+        if center:
+            return (pixelx + (self.TILE_WIDTH//2), pixely + (self.TILE_WIDTH//2))
+        else:
+            return (pixelx, pixely)
     
     def draw(self, screen: pg.Surface):
          '''
