@@ -6,6 +6,8 @@ from Player import *
 from BasicEnemy import *
 from GameMap import *
 
+pg.font.init()
+
 class Button(pg.sprite.Sprite):
     '''
     basic class for keeping track of button images and rects (for click detection and drawing)
@@ -41,10 +43,10 @@ class State:
         pass
 
 class StartMenu(State):
-    def __init__(self, screen: pg.surface.Surface) -> None:
-        self.screen = screen
+    def __init__(self, game) -> None:
+        self.game = game
         self.playButton = Button("Play")
-        self.playButton.rect.center = screen.get_rect().center
+        self.playButton.rect.center = game.screen.get_rect().center
 
     def process(self, events):
         super().process(events)
@@ -54,12 +56,14 @@ class StartMenu(State):
                     print("go to next state")
 
     def render(self):
-        self.screen.fill("black")
-        self.screen.blit(self.playButton.image, self.playButton.rect)
+        self.game.screen.fill("black")
+        self.game.screen.blit(self.playButton.image, self.playButton.rect)
 
 class TurnControl(State):
-        
-        def __init__(self, screen: pg.Surface, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
+        '''Does the turn based tactical handling like dnd encounters. Not exclusively combat. there are plans for negotiating and escaping.'''
+        def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
+            self.game = game
+
             self.tileMap = tileMap
             self.player = player
             self.turnTakers = [self.player]
@@ -68,21 +72,18 @@ class TurnControl(State):
             
             self.currentTurn = 0
             
-            #stack for holding active UI elements. i.e. inventory goes on top of main game and a popup for an inventory item goes on top of that
-            self.activeElementsStack = []
-
             #MENU UI
             self.UIelements = pg.sprite.Group()
 
             self.nextTurnButton = Button("End Turn")
-            self.nextTurnButton.rect.bottomleft = screen.get_rect().bottomleft
+            self.nextTurnButton.rect.bottomleft = game.screen.get_rect().bottomleft
 
             self.turnIndicator = Button("Player's Turn")
             print(f"turn indicator is this many pixels wide:  {self.turnIndicator.image.get_width()}")
 
-            self.turnIndicator.rect.topright = screen.get_rect().topright
+            self.turnIndicator.rect.topright = game.screen.get_rect().topright
             self.actionPointsIndicator = Button("Action Points: 3")
-            self.actionPointsIndicator.rect.bottomright = screen.get_rect().bottomright
+            self.actionPointsIndicator.rect.bottomright = game.screen.get_rect().bottomright
 
             self.inventoryButton = Button("Inventory")
             self.inventoryButton.rect.topright = self.turnIndicator.rect.bottomright
@@ -101,31 +102,28 @@ class TurnControl(State):
 
             self.UIelements.add((self.turnIndicator, self.actionPointsIndicator, self.inventoryButton, self.nextTurnButton))
 
-        def drawUI(self, screen: pg.Surface):
+        def drawUI(self):
             '''
             draws basic turn ui onto the screen
             '''
             ####NEW WAY OF DRAWING WITH GROUPS instead of manual blits
-            self.UIelements.draw(screen)
+            self.UIelements.draw(self.game.screen)
 
             #if the player has clicked on a tile show that
             if self.shouldDrawMoveMarker:
-                screen.blit(*self.clickedTileMarker) #star unpacks tuple into arguments (in case i forget)
+                self.game.screen.blit(*self.clickedTileMarker) #star unpacks tuple into arguments (in case i forget)
             if self.shouldDrawCrossHairMarker:
-                screen.blit(*self.crossHairMarker)
+                self.game.screen.blit(*self.crossHairMarker)
         
-        def handleClick(self, pos: tuple[float, float], gameMap: GameMap):
-            #check for confirmed clicks
-            #ELSE if on map or on entity set the marker
-            #ELSE IF other, clear the UI and such
-            '''does things for click, returns true if the click was handled, false if it still needs to be handled.'''
-            #if self.turnTakers[self.currentTurn] != self.player: return False
-            if len(self.activeElementsStack) != 0:
-                #let the active element handle all the things.
-                self.activeElementsStack[-1].handleClick(self.tileMap, self.entities)
-                return
-            
-            #active elements will be sprite groups that get drawn to the screen and that have a handleClick method.
+        def process(self, events: list[pg.event.Event]):
+            for event in events:
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+                    self.handleClick(event.pos)
+                elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                    print("testing state transitions")
+                    self.game.changeState(StartMenu(self.game))
+        
+        def handleClick(self, pos: tuple[float, float]):
             self.shouldDrawCrossHairMarker = False
 
             self.shouldDrawMoveMarker = False
@@ -138,9 +136,9 @@ class TurnControl(State):
             
             if self.turnTakers[self.currentTurn] != self.player: return False
             ####HANDLE CLICKS THAT HAPPEN OVER MAP
-            elif gameMap.rect.collidepoint(pos):
+            elif self.tileMap.rect.collidepoint(pos):
                 ####CHECK CLICKS ON ENTITIES
-                clickedTile = gameMap.getTile(pos)
+                clickedTile = self.tileMap.getTile(pos)
                 for entity in self.entities:
                     if entity.tileLocation == clickedTile:
                         #Handle confirmed click
@@ -150,14 +148,14 @@ class TurnControl(State):
                             return True
                         self.shouldDrawCrossHairMarker = True
                         print("entity was clicked")
-                        self.crossHairMarker[1].topleft = gameMap.tileToPixel(gameMap.getTile(pos))
+                        self.crossHairMarker[1].topleft = self.tileMap.tileToPixel(self.tileMap.getTile(pos))
                         self.lastClickedTile = clickedTile
                         return True
                 
                 ####CHECK CLICKS ONLY ON MAP
-                distance = gameMap.calcDistance(self.player.tileLocation, clickedTile)
+                distance = self.tileMap.calcDistance(self.player.tileLocation, clickedTile)
                 print(f"detected map click on tile {distance} units from player")
-                canMove = gameMap.calcDistance(self.player.tileLocation, clickedTile) <= self.player.actionPoints * 3
+                canMove = self.tileMap.calcDistance(self.player.tileLocation, clickedTile) <= self.player.actionPoints * 3
 
                 if clickedTile == self.lastClickedTile and canMove:
                     self.player.moveTo(clickedTile) #execute action
@@ -166,19 +164,13 @@ class TurnControl(State):
                 elif not canMove:
                     print("too far buckaroo")
                 elif clickedTile != self.lastClickedTile:
-                    self.clickedTileMarker[1].topleft = gameMap.tileToPixel(clickedTile)
+                    self.clickedTileMarker[1].topleft = self.tileMap.tileToPixel(clickedTile)
                     self.shouldDrawMoveMarker = True
                 
                 self.lastClickedTile = clickedTile
-                #if is repeat click and is valid, move there
-                #if not valid show message
-                #if not repeat, update last clicked
                 return True
-                pass
-            '''
-            if the player clicks on a tile, check if that is a legal move and if it is, tell them how much it will cost
-            if the player clicks on an enemy, tell them what range, and draw line to the enemy
-            '''
+
+
         def updateActionPoints(self, newVal):
             self.actionPointsIndicator.updateText(f"Action Points {newVal}")
 
@@ -197,14 +189,16 @@ class TurnControl(State):
             if self.player.health == 0:
                 print("GAME OVER")
 
-        def render(self, screen: pg.surface.Surface):
-                self.tileMap.draw(screen)
+        def render(self):
+                self.game.screen.fill("black")
+
+                self.tileMap.draw(self.game.screen)
                 #bigMap.drawDebug(screen)
-                self.tileMap.drawAdjTile(screen, self.player.tileLocation)
+                self.tileMap.drawAdjTile(self.game.screen, self.player.tileLocation)
 
                 for actor in self.turnTakers:
                     actor.rect.topleft = self.tileMap.tileToPixel(actor.tileLocation)
-                    actor.draw(screen)
+                    actor.draw(self.game.screen)
 
-                self.drawUI(screen)
+                self.drawUI()
 
