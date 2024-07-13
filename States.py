@@ -16,16 +16,16 @@ class Button(pg.sprite.Sprite):
     BUTTON_HEIGHT = 30
     textWriter = pg.font.Font(pg.font.get_default_font(), BUTTON_HEIGHT)
 
-    def __init__(self, text) -> None:
+    def __init__(self, text, textColor="black", bgColor="grey") -> None:
         pg.sprite.Sprite.__init__(self)
-        self.image = self.textWriter.render(text, 1, "black", "grey")
+        self.image = self.textWriter.render(text, 1, textColor, bgColor)
         self.rect = self.image.get_rect()
     
-    def updateText(self, newVal):
+    def updateText(self, newVal, textColor="black", bgColor="grey"):
         '''
         uses static font object to render new text and updates image surface accordingly
         '''
-        self.image = self.textWriter.render(newVal, 1, "black", "grey")
+        self.image = self.textWriter.render(newVal, 1, textColor, bgColor)
 
 
 class State:
@@ -60,6 +60,7 @@ class StartMenu(State):
         self.game.screen.blit(self.playButton.image, self.playButton.rect)
 
 class TurnControl(State):
+        ## substates should just be able to use the State class. Im not sure how arbitrary nesting of code will work. If I was just doing one level deep I would make an enum and use switch case for the logic but that doesn't nest well. you end up with a million switch cases nested. I want something that can nest arbitrarily but that is also lightweight. I would just use the state like I have right now, but the switching makes it really clunky. I also don't know how to do persistent state.
         '''Does the turn based tactical handling like dnd encounters. Not exclusively combat. there are plans for negotiating and escaping.'''
         def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
             self.game = game
@@ -87,6 +88,10 @@ class TurnControl(State):
 
             self.inventoryButton = Button("Inventory")
             self.inventoryButton.rect.topright = self.turnIndicator.rect.bottomright
+
+            self.hpIndicator = Button(f"HP: {self.player.health}", "red", "black")
+            self.hpIndicator.rect.topright = self.inventoryButton.rect.bottomright
+
             #MAP UI
             self.lastClickpos: None | tuple[int, int] = None
 
@@ -100,7 +105,7 @@ class TurnControl(State):
             self.entities = entities # check to see if I should use sprite groups instead or something
                 #my current thinking is that I will check clicks to see if they are on something in the entities list, and if they are, then I will check to see if that entity is interactable and what it's interaction methods are BTW ALT + Z TOGGLES LINE WRAPPING. USEFUL FOR COMMENTS LIKE THIS
 
-            self.UIelements.add((self.turnIndicator, self.actionPointsIndicator, self.inventoryButton, self.nextTurnButton))
+            self.UIelements.add((self.turnIndicator, self.actionPointsIndicator, self.inventoryButton, self.nextTurnButton, self.hpIndicator))
 
         def drawUI(self):
             '''
@@ -188,6 +193,12 @@ class TurnControl(State):
             '''Handles the processing of things that occur "automatically" such as transitions between frames of animations or updates to physics based on velocity. AFAIK I won't be doing much in here because most things are handled with rules or from the UI. I might be wrong though'''
             if self.player.health == 0:
                 print("GAME OVER")
+            self.actionPointsIndicator.updateText(f"Action Points: {self.player.actionPoints}")
+            self.hpIndicator.updateText(f"HP: {self.player.health}", "red", "black")
+
+            if self.turnTakers[self.currentTurn] != self.player:
+                self.turnTakers[self.currentTurn].takeTurn(self.tileMap, self.player)
+                self.nextTurn()
 
         def render(self):
                 self.game.screen.fill("black")
