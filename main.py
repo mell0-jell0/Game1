@@ -18,8 +18,7 @@ My friend A. for convincing me to get started and keeping me accountable by aski
 
 class Game:
     def __init__(self) -> None:
-        self.lastState: State = State()
-        self.currentState: State = State()
+        self.stateStack: list[State] = []
         pg.init()
         self.WIN_WIDTH = 1280
         self.WIN_HEIGHT = 720
@@ -27,9 +26,8 @@ class Game:
         self.clock = pg.time.Clock()
         self.dt = 0
 
-    def changeState(self, nextState: State):
-        self.lastState = self.currentState
-        self.currentState = nextState
+    def enterState(self, nextState: State):
+        self.stateStack.append(nextState)
 
     def run(self):
         #MARK: Main game loop
@@ -37,9 +35,9 @@ class Game:
         while running:
             if pg.event.get(pg.QUIT):
                 running = False
-            self.currentState.process(pg.event.get())
-            self.currentState.update()
-            self.currentState.render()
+            self.stateStack[-1].process(pg.event.get())
+            self.stateStack[-1].update()
+            self.stateStack[-1].render()
 
             self.clock.tick(60)
             pg.display.flip()
@@ -50,14 +48,14 @@ class Game:
 game = Game()
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-player = Player("16guySmaller.png", 10, "placeholder")
+player = Player("16guySmaller.png", 10, "placeholder", [])
 enemy1 = BasicEnemy("basicEnemy.png")
 
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 
 
-turnState = TurnControl(game, bigMap, player, [enemy1], [enemy1])
-
-game.changeState(turnState)
+turnState = TurnControl(game, bigMap, player, [enemy1], [player])
+invState = InventoryMenu(game, bigMap, player, [enemy1], [player])
+game.enterState(invState)
 game.run()

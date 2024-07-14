@@ -4,10 +4,11 @@ class Player(pg.sprite.Sprite):
     '''
     handles basic player character functionality such as health, the sprite, and inventory
     '''
-    def __init__(self, imgName, health, weapon) -> None:
+    def __init__(self, imgName, health, weapon, inventory) -> None:
         pg.sprite.Sprite.__init__(self)
         self.health = health
         self.weapon = weapon
+        self.inventory = inventory
         self.image, self.rect = load_image(imgName, scale=IMG_SCALE)
         self.tileLocation = (0,0)
         self.actionPoints = 3

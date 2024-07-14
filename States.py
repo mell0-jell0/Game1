@@ -6,27 +6,6 @@ from Player import *
 from BasicEnemy import *
 from GameMap import *
 
-pg.font.init()
-
-class Button(pg.sprite.Sprite):
-    '''
-    basic class for keeping track of button images and rects (for click detection and drawing)
-    '''
-    BUTTON_WIDTH = 80
-    BUTTON_HEIGHT = 30
-    textWriter = pg.font.Font(pg.font.get_default_font(), BUTTON_HEIGHT)
-
-    def __init__(self, text, textColor="black", bgColor="grey") -> None:
-        pg.sprite.Sprite.__init__(self)
-        self.image = self.textWriter.render(text, 1, textColor, bgColor)
-        self.rect = self.image.get_rect()
-    
-    def updateText(self, newVal, textColor="black", bgColor="grey"):
-        '''
-        uses static font object to render new text and updates image surface accordingly
-        '''
-        self.image = self.textWriter.render(newVal, 1, textColor, bgColor)
-
 
 class State:
     '''Abstract class for game states'''
@@ -213,3 +192,31 @@ class TurnControl(State):
 
                 self.drawUI()
 
+class InventoryMenu(State):
+    def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list):
+        self.game = game
+        self.tileMap = tileMap
+        self.player = player
+        self.allTurnTakers = [player]
+        for turnTaker in otherTurnTakers:
+            self.allTurnTakers.append(turnTaker)
+        self.entities = entities
+
+        self.menuRegion = pg.rect.Rect(0, 0, game.WIN_WIDTH // 2, game.WIN_HEIGHT)
+        self.menuRegion.topright = game.screen.get_rect().topright
+
+        self.img = pg.Surface((self.menuRegion.width, self.menuRegion.height))
+        self.img.fill((80,80,80))
+    
+    def process(self, events):
+        pass
+
+    def update(self):
+        for character in self.allTurnTakers:
+            character.rect.topleft = self.tileMap.tileToPixel(character.tileLocation)
+
+    def render(self):
+        self.tileMap.draw(self.game.screen)
+        for character in self.allTurnTakers:
+            self.game.screen.blit(character.image, character.rect)
+        self.game.screen.blit(self.img, self.menuRegion)
