@@ -65,6 +65,7 @@ bigMap.setOffset(cameraOffset)
 
 
 turnState = TurnControl(game, bigMap, player, [enemy1], [enemy1, player])
+expState = Exploration(game, bigMap, player, [enemy1], [enemy1, player])
 invState = InventoryMenu(game, bigMap, player, [enemy1], [enemy1, player])
-game.enterState(turnState)
+game.enterState(expState)
 game.run()

@@ -148,6 +148,35 @@ class GameMap:
                     distance[tile] = distance[currTile] + 1 #update the distance
             visited.add(currTile)
             if currTile == target: return distance[currTile]
+
+    def getPath(self, source: tuple[int, int], target: tuple[int, int]) -> deque:
+        '''
+        Like calcDistance, uses bfs to find a shortest path between source and target. not accounting for cover/obstructions
+        '''
+        toVisit = deque([source]) #basic bfs queue
+        visited = set() #keep track of what we already visited
+        parents = {} #track parent pointers for pathing later
+        distance: dict[tuple[int, int], int] = {source: 0}
+
+        while True:
+            if len(toVisit) == 0: return []
+            currTile = toVisit.pop() # get the next thing to visit
+            for tile in self.adjList[currTile]: #update all the newly discovered tiles if applicable
+                if tile not in visited:
+                    parents[tile] = currTile
+                    toVisit.appendleft(tile) #add the tile to the list if it hasn't been explored
+                    distance[tile] = distance[currTile] + 1 #update the distance
+            visited.add(currTile)
+
+            if currTile == target: #end protocol
+                path = []
+                currTile = target
+                while True: #continually add tiles to path
+                    path.append(currTile)
+                    if currTile == source: break
+                    currTile = parents[currTile]
+                path.reverse()
+                return deque(path)
     
     def setOffset(self, newVal):
         self.offset = newVal
