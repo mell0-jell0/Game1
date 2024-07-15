@@ -34,11 +34,12 @@ class Button(pg.sprite.Sprite):
     '''
     basic class for keeping track of button images and rects (for click detection and drawing)
     '''
-    def __init__(self, text, textColor="black", bgColor="grey", size=30) -> None:
+    def __init__(self, text, textColor="black", bgColor="grey", size=30, callback = None) -> None:
         self.textWriter = pg.font.Font(pg.font.get_default_font(), size)
         pg.sprite.Sprite.__init__(self)
         self.image = self.textWriter.render(text, 1, textColor, bgColor)
         self.rect = self.image.get_rect()
+        self.callback = callback
     
     def updateText(self, newVal, textColor="black", bgColor="grey"):
         '''
@@ -46,6 +47,34 @@ class Button(pg.sprite.Sprite):
         '''
         self.image = self.textWriter.render(newVal, 1, textColor, bgColor)
 
+class Popup(pg.sprite.Sprite):
+    def __init__(self, buttonText: list[str], operations: list, textColor="black", bgColor="grey", textSize=10):
+        #this are references to list we might need to do a deep copy or something
+        assert(len(operations) == len(buttonText))
+        self.buttonText = buttonText
+        self.location = (0,0)
+        self.buttons = pg.sprite.Group()
+        for idx, text in enumerate(buttonText):
+            #give buttons the matching callback in the operations list
+            self.buttons.add(Button(text, size=textSize, callback=operations[idx]))
+    
+    def draw(self, screen: pg.surface.Surface):
+        yDisplacement = 0
+        for button in self.buttons:
+            button.rect.topleft = (self.location[0], self.location[1] + yDisplacement)
+            screen.blit(button.image, button.rect)
+            yDisplacement += button.rect.height
+
+    def pointCollide(self, pos):
+        for button in self.buttons:
+            if button.rect.collidepoint(pos):
+                return True
+
+    def handleClick(self, pos):
+        clicked = False
+        for button in self.buttons:
+            if button.rect.collidepoint(pos):
+                button.callback()
 
 class entityType(enum.Enum):
     ENEMY = enum.auto()

@@ -212,17 +212,27 @@ class InventoryMenu(State):
     
     def process(self, events: list[pg.event.Event]):
         for event in events:
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                print("should be popping inventory state from stack when state transitions are hooked up right")
+                #self.game.stateStack.pop()
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
-                #check for an item click
-                itemClicked = False
-                for invItem in self.player.inventory:
-                    if invItem.rect.collidepoint(event.pos):
-                        itemClicked = True
-                        self.activePopup = invItem.popup
-                        self.activePopup.location = invItem.rect.center
-                
-                if not itemClicked:
-                    self.activePopup = None
+                #default to popup
+                if self.activePopup != None:
+                    if self.activePopup.pointCollide(event.pos):
+                        self.activePopup.handleClick(event.pos)
+                    else:
+                        self.activePopup = None
+                else:
+                    #check for an item click
+                    itemClicked = False
+                    for invItem in self.player.inventory:
+                        if invItem.rect.collidepoint(event.pos):
+                            itemClicked = True
+                            self.activePopup = invItem.popup
+                            self.activePopup.location = invItem.rect.center
+                    
+                    if not itemClicked:
+                        self.activePopup = None
 
 
     def update(self):
@@ -237,8 +247,31 @@ class InventoryMenu(State):
         
         #render the menu background
         self.game.screen.blit(self.img, self.menuRegion)
+
         yDisplacement = 0
+
+        equippedText = Button("Equipped", "Black", "Pink", size=20)
+        equippedText.rect.topleft = self.menuRegion.topleft
+        self.game.screen.blit(equippedText.image, equippedText.rect)
+        yDisplacement+= equippedText.rect.height
+        
+        if self.player.equipped != None:
+            self.player.equipped.rect.topleft = equippedText.rect.bottomleft
+            self.game.screen.blit(self.player.equipped.image, self.player.equipped.rect)
+            yDisplacement += self.player.equipped.rect.height
+        
+        #divider between equipped and rest
+        lineWidth = 4
+        yDisplacement += lineWidth // 2
+        lineStart = (self.menuRegion.topleft[0], self.menuRegion.topleft[1] + yDisplacement)
+        lineEnd = (lineStart[0] + self.menuRegion.width, lineStart[1])
+        pg.draw.line(self.game.screen, "black", lineStart, lineEnd, 4)
+        yDisplacement += lineWidth // 2
+
+        
+        #render the other items
         for item in self.player.inventory:
+            if item == self.player.equipped: continue
             item.rect.topleft = (self.menuRegion.topleft[0], self.menuRegion.topleft[1] + yDisplacement)
             yDisplacement += item.rect.height
             self.game.screen.blit(item.image, item.rect)

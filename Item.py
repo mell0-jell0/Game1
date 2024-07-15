@@ -1,22 +1,7 @@
 import math
 from utility import *
 
-class Popup(pg.sprite.Sprite):
-    def __init__(self, buttonText: list[str], operations: list, textColor="black", bgColor="grey", textSize=10):
-        #this are references to list we might need to do a deep copy or something
-        self.buttonText = buttonText
-        self.operations = operations
-        self.location = (0,0)
-        self.buttons = pg.sprite.Group()
-        for text in buttonText:
-            self.buttons.add(Button(text, size=textSize))
-    
-    def draw(self, screen: pg.surface.Surface):
-        yDisplacement = 0
-        for button in self.buttons:
-            button.rect.topleft = (self.location[0], self.location[1] + yDisplacement)
-            screen.blit(button.image, button.rect)
-            yDisplacement += button.rect.height
+
 
 
 

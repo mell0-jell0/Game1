@@ -1,4 +1,5 @@
 from utility import *
+from Item import *
 
 class Player(pg.sprite.Sprite):
     '''
@@ -9,12 +10,20 @@ class Player(pg.sprite.Sprite):
         self.health = health
         self.weapon = weapon
         self.inventory: pg.sprite.Group = inventory
+        self.equipped: None | Weapon = None
         self.image, self.rect = load_image(imgName, scale=IMG_SCALE)
         self.tileLocation = (0,0)
         self.actionPoints = 3
 
+    def equip(self, weapon: Weapon | None):
+        self.equipped = weapon
+    
     def attack(self, target):
-        target.health -= 3
+        if self.equipped == None:
+            print("No equipped weapon")
+        else:
+            target.health -= self.equipped.damage
+            print(f"Target was dealt: {self.equipped.damage} damage")
 
     def moveTo(self, tile: tuple[int, int]):
         self.tileLocation = tile

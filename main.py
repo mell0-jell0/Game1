@@ -47,19 +47,24 @@ class Game:
 
 
 game = Game()
+def fa():
+    print("option 1 pressed")
+def fb():
+    print("option 2 pressed")
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-item1 = Item("bolty1.png", "placeholder type", Popup(["option 1", "option 2"], []))
-item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], []))
+item1 = Item("bolty1.png", "placeholder type", Popup(["option 1", "option 2"], [fa, fb]))
+item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], [fa, fb]))
 
 player = Player("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
+player.equip(None)
 enemy1 = BasicEnemy("basicEnemy.png")
 
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 
 
-turnState = TurnControl(game, bigMap, player, [enemy1], [player])
-invState = InventoryMenu(game, bigMap, player, [enemy1], [player])
-game.enterState(invState)
+turnState = TurnControl(game, bigMap, player, [enemy1], [enemy1, player])
+invState = InventoryMenu(game, bigMap, player, [enemy1], [enemy1, player])
+game.enterState(turnState)
 game.run()
