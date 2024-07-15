@@ -34,11 +34,8 @@ class Button(pg.sprite.Sprite):
     '''
     basic class for keeping track of button images and rects (for click detection and drawing)
     '''
-    BUTTON_WIDTH = 80
-    BUTTON_HEIGHT = 30
-    textWriter = pg.font.Font(pg.font.get_default_font(), BUTTON_HEIGHT)
-
-    def __init__(self, text, textColor="black", bgColor="grey") -> None:
+    def __init__(self, text, textColor="black", bgColor="grey", size=30) -> None:
+        self.textWriter = pg.font.Font(pg.font.get_default_font(), size)
         pg.sprite.Sprite.__init__(self)
         self.image = self.textWriter.render(text, 1, textColor, bgColor)
         self.rect = self.image.get_rect()

@@ -1,4 +1,3 @@
-from pygame.sprite import _Group
 from utility import *
 #all characters have sprite, hp, inventory, and equipped items
 

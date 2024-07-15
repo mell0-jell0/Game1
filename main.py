@@ -5,6 +5,7 @@ import pygame as pg
 from utility import *
 from GameMap import *
 from Player import *
+from Item import *
 #from TurnController import *
 from States import *
 '''
@@ -48,7 +49,10 @@ class Game:
 game = Game()
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-player = Player("16guySmaller.png", 10, "placeholder", [])
+item1 = Item("bolty1.png", "placeholder type", Popup(["option 1", "option 2"], []))
+item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], []))
+
+player = Player("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
 enemy1 = BasicEnemy("basicEnemy.png")
 
 cameraOffset = (-400,-80)

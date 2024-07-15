@@ -207,16 +207,42 @@ class InventoryMenu(State):
 
         self.img = pg.Surface((self.menuRegion.width, self.menuRegion.height))
         self.img.fill((80,80,80))
+
+        self.activePopup = None
     
-    def process(self, events):
-        pass
+    def process(self, events: list[pg.event.Event]):
+        for event in events:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+                #check for an item click
+                itemClicked = False
+                for invItem in self.player.inventory:
+                    if invItem.rect.collidepoint(event.pos):
+                        itemClicked = True
+                        self.activePopup = invItem.popup
+                        self.activePopup.location = invItem.rect.center
+                
+                if not itemClicked:
+                    self.activePopup = None
+
 
     def update(self):
         for character in self.allTurnTakers:
             character.rect.topleft = self.tileMap.tileToPixel(character.tileLocation)
 
     def render(self):
+        #render all the stuff from the background
         self.tileMap.draw(self.game.screen)
         for character in self.allTurnTakers:
             self.game.screen.blit(character.image, character.rect)
+        
+        #render the menu background
         self.game.screen.blit(self.img, self.menuRegion)
+        yDisplacement = 0
+        for item in self.player.inventory:
+            item.rect.topleft = (self.menuRegion.topleft[0], self.menuRegion.topleft[1] + yDisplacement)
+            yDisplacement += item.rect.height
+            self.game.screen.blit(item.image, item.rect)
+        
+        #render the active popup
+        if self.activePopup != None:
+            self.activePopup.draw(self.game.screen)
