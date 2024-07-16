@@ -81,26 +81,38 @@ class Exploration(State):
 
         #movement handling variables
         self.path : deque = deque()
+        self.moveTarget: None | tuple[int, int] = None
+
+        #move animation variables
+        self.animProgress = 0 
+        self.timePerTile = 250 #in ms
+
     
     def process(self, events: list[pg.event.Event]):
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
                 if self.tileMap.rect.collidepoint(event.pos):
-                    self.path = self.tileMap.getPath(self.player.tileLocation, self.tileMap.getTile(event.pos))
+                    self.moveTarget = self.tileMap.getTile(event.pos)
                     print("clicked on map and got path")
                 else:
                     print("didn't click on map")
 
     def update(self):
-        if len(self.path) == 0: return
-        if self.path[-1] == self.player.tileLocation:
-            self.path = deque()
-        else:
-            #get the next tile in the path, lerp the 
-            #get path to target location
-            #progress along the path one tile at a time
-            #if a new path is given, start moving along that path once the current tile transition is up
+        if self.moveTarget == None and len(self.path) == 0:
             pass
+        elif self.moveTarget != None and len(self.path) ==0:
+            self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
+        elif self.moveTarget != None and len(self.path) != 0:
+            if self.moveTarget == self.path[-1]:
+                #animate normally until end of path
+                self.animProgress += self.game.clock.get_time()
+                if self.animProgress >= self.timePerTile:
+                    self.animProgress = 0
+                    self.player.tileLocation = self.path[0]
+                    self.path.popleft()
+            else:
+                #wait till break in path to update path to new
+                pass
         
 
     def render(self):

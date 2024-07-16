@@ -3,7 +3,7 @@ from utility import *
 
 IMG_SCALE = 3
 DEBUG = True
-
+tile = tuple[int, int]
 class GameMap:
     '''
     reads the manifest and csv, loads in tile textures, and handles the underlying pathing of the map
@@ -159,7 +159,7 @@ class GameMap:
         distance: dict[tuple[int, int], int] = {source: 0}
 
         while True:
-            if len(toVisit) == 0: return []
+            if len(toVisit) == 0: return deque()
             currTile = toVisit.pop() # get the next thing to visit
             for tile in self.adjList[currTile]: #update all the newly discovered tiles if applicable
                 if tile not in visited:
@@ -176,7 +176,10 @@ class GameMap:
                     if currTile == source: break
                     currTile = parents[currTile]
                 path.reverse()
-                return deque(path)
+                path = deque(path)
+                #remove source from path
+                path.popleft()
+                return path
     
     def setOffset(self, newVal):
         self.offset = newVal
