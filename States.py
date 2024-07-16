@@ -110,9 +110,15 @@ class Exploration(State):
                     self.animProgress = 0
                     self.player.tileLocation = self.path[0]
                     self.path.popleft()
-            else:
-                #wait till break in path to update path to new
-                pass
+            else:   
+                if self.animProgress == 0: #if at break in path, update
+                    self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
+                else: #if not at break in path, keep animating
+                    self.animProgress += self.game.clock.get_time()
+                    if self.animProgress >= self.timePerTile:
+                        self.animProgress = 0
+                        self.player.tileLocation = self.path[0]
+                        self.path.popleft()
         
 
     def render(self):
