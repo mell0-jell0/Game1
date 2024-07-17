@@ -68,13 +68,6 @@ class Exploration(State):
         self.hpIndicator = Button(f"HP: {self.player.health}", "red", "black")
         self.hpIndicator.rect.topright = self.inventoryButton.rect.bottomright
 
-        #MAP UI
-        self.lastClickpos: None | tuple[int, int] = None
-
-        self.lastClickedTile = (-1, -1)
-        self.clickedTileMarker = load_image("moveIndicator1.png") #perhaps rename to moveTileMarker
-        self.shouldDrawMoveMarker = False
-
         self.entities = entities # check to see if I should use sprite groups instead or something
 
         self.UIelements.add((self.inventoryButton, self.hpIndicator))
@@ -98,19 +91,19 @@ class Exploration(State):
                     print("didn't click on map")
 
     def update(self):
-        if self.moveTarget == None and len(self.path) == 0:
+        if self.moveTarget == None and len(self.path) == 0: #no path to walk
             pass
-        elif self.moveTarget != None and len(self.path) ==0:
+        elif self.moveTarget != None and len(self.path) ==0: #new target, get the new path
             self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
-        elif self.moveTarget != None and len(self.path) != 0:
-            if self.moveTarget == self.path[-1]:
+        elif self.moveTarget != None and len(self.path) != 0: #active target and path
+            if self.moveTarget == self.path[-1]: #path is active for current target
                 #animate normally until end of path
                 self.animProgress += self.game.clock.get_time()
                 if self.animProgress >= self.timePerTile:
                     self.animProgress = 0
                     self.player.tileLocation = self.path[0]
                     self.path.popleft()
-            else:   
+            else: #target has changed from the old path
                 if self.animProgress == 0: #if at break in path, update
                     self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
                 else: #if not at break in path, keep animating
@@ -122,18 +115,24 @@ class Exploration(State):
         
 
     def render(self):
+        PATH_THICKNESS = 2
+        PATH_COLOR = "pink"
         for actor in self.turnTakers:
             actor.rect.topleft = self.tileMap.tileToPixel(actor.tileLocation)
 
         self.tileMap.draw(self.game.screen)
+        self.tileMap.drawCoverDebug(self.game.screen)
         for actor in self.turnTakers:
             self.game.screen.blit(actor.image, actor.rect)
         
-        for tile in self.path:
+        for idx, tile in enumerate(self.path):
             if tile == self.path[-1]:
-                pg.draw.circle(self.game.screen, "green", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//3)
+                pg.draw.circle(self.game.screen, "green", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//4)
             else:
-                pg.draw.circle(self.game.screen, "pink", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//3)
+                startPixel = self.tileMap.tileToPixel(tile, center=True)
+                endPixel = self.tileMap.tileToPixel(self.path[idx+1], center=True)
+                pg.draw.line(self.game.screen, PATH_COLOR, startPixel, endPixel, width=PATH_THICKNESS)
+                #pg.draw.circle(self.game.screen, "pink", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//3)
 
         self.UIelements.draw(self.game.screen)
 

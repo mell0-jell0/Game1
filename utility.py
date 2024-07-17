@@ -32,7 +32,7 @@ pg.font.init()
 
 class Button(pg.sprite.Sprite):
     '''
-    basic class for keeping track of button images and rects (for click detection and drawing)
+    basic class for keeping track of button images and rects and drawing text
     '''
     def __init__(self, text, textColor="black", bgColor="grey", size=30, callback = None) -> None:
         self.textWriter = pg.font.Font(pg.font.get_default_font(), size)
@@ -48,6 +48,10 @@ class Button(pg.sprite.Sprite):
         self.image = self.textWriter.render(newVal, 1, textColor, bgColor)
 
 class Popup(pg.sprite.Sprite):
+    '''
+    small popup menu with buttons and actions associated with each button
+    active state must implement popup handling
+    '''
     def __init__(self, buttonText: list[str], operations: list, textColor="black", bgColor="grey", textSize=10):
         #this are references to list we might need to do a deep copy or something
         assert(len(operations) == len(buttonText))

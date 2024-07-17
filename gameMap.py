@@ -4,6 +4,7 @@ from utility import *
 IMG_SCALE = 3
 DEBUG = True
 tile = tuple[int, int]
+tileId = str
 class GameMap:
     '''
     reads the manifest and csv, loads in tile textures, and handles the underlying pathing of the map
@@ -14,20 +15,33 @@ class GameMap:
         creates one image for each tile type
         maps
         '''
+
         manifestPath = os.path.join(data_dir, manifestName)
         with open(manifestPath) as fileIn:
             lines = fileIn.readlines()
             textureMap = {}
             navMap = {}
+            self.fullCoverTiles = set()
+            self.halfCoverTiles = set()
             for line in lines:
                 line = line.strip('\n')
                 line = line.split(',')
                 #load image and imagerect
                 newImgTuple = load_image(line[1], scale=IMG_SCALE)
                 self.TILE_WIDTH = newImgTuple[1].width
+
                 #store image and imagerect in the map at the character specified
                 textureMap[line[0]] = newImgTuple
                 navMap[line[0]] = line[2]
+
+                #get list of all cover tiles
+                match line[3]:
+                    case "full":
+                        self.fullCoverTiles.add(line[0])
+                    case "half":
+                        self.halfCoverTiles.add(line[0])
+                    case _:
+                          pass
             # contains map of {tileSymbol -> (imageSurface, imageRect)}
             self.textureMap: dict[str, tuple[pg.Surface, pg.Rect]] = textureMap
             # contains map from {tileSymbol -> (yes/no navigable)}
@@ -44,7 +58,7 @@ class GameMap:
                 line = line.split(",")
                 grid.append(line)
             # contains grid of all the symbols in the map
-            self.tileMap: list[list[str]] = grid
+            self.tileMap: list[list[tileId]] = grid
             # get height and width from the tilemap we just made
             print("we still need to validate csv inputs. height, width, and map may be broken")
             self.height: int = len(self.tileMap)
@@ -83,7 +97,7 @@ class GameMap:
     
     def getTile(self, pos):
         '''
-        takes an xy pixel position and returns an xy of the tile that location resides in
+        takes an xy pixel position and returns a row,col of the tile that location resides in
         '''
         tileRow = (pos[1] + self.offset[1]) // self.TILE_WIDTH
         tileCol = (pos[0] + self.offset[0]) // self.TILE_WIDTH
@@ -91,7 +105,7 @@ class GameMap:
 
     def tileToPixel(self, tileCoord, center=False):
         '''
-        takes a tile x,y and spits out a pixel x,y for the top left of that tile
+        takes a tile row,col and spits out a pixel x,y for the top left of that tile
         '''
         pixelx = (tileCoord[1] * self.TILE_WIDTH) - self.offset[0]
         pixely = (tileCoord[0] * self.TILE_WIDTH) - self.offset[1]
@@ -184,6 +198,39 @@ class GameMap:
     def setOffset(self, newVal):
         self.offset = newVal
         self.rect.topleft = (-1*newVal[0], -1*newVal[1])
+    
+    def getFullCover(self):
+        '''
+        yields a list of rects which are pieces of full cover
+        '''
+        outList = []
+        for rowNum, row in enumerate(self.tileMap):
+            for colNum, tile in enumerate(row):
+                if tile in self.fullCoverTiles:
+                    topleft = self.tileToPixel((rowNum, colNum))
+                    width_Height = self.TILE_WIDTH, self.TILE_WIDTH
+                    outList.append(pg.rect.Rect(topleft, width_Height))
+        return outList
+    
+    def getHalfCover(self):
+        '''
+        yields a list of rects which are pieces of half cover
+        '''
+        outList = []
+        for rowNum, row in enumerate(self.tileMap):
+            for colNum, tile in enumerate(row):
+                if tile in self.halfCoverTiles:
+                    topleft = self.tileToPixel((rowNum, colNum))
+                    width_Height = self.TILE_WIDTH, self.TILE_WIDTH
+                    outList.append(pg.rect.Rect(topleft, width_Height))
+        return outList
+    
+    def drawCoverDebug(self, screen):
+        for rect in self.getFullCover():
+            pg.draw.rect(screen, "red", rect)
+        
+        for rect in self.getHalfCover():
+            pg.draw.rect(screen, "yellow", rect)
 # def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
 #     '''
 #     reads in list of number that correspond to different tiles

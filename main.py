@@ -51,10 +51,12 @@ def fa():
     print("option 1 pressed")
 def fb():
     print("option 2 pressed")
+fc = lambda : print("lambda option 1")
+fd = lambda : print("lambda option 2")
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
 item1 = Item("bolty1.png", "placeholder type", Popup(["option 1", "option 2"], [fa, fb]))
-item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], [fa, fb]))
+item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], [fc, fd]))
 
 player = Player("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
 player.equip(None)
@@ -67,5 +69,8 @@ bigMap.setOffset(cameraOffset)
 turnState = TurnControl(game, bigMap, player, [enemy1], [enemy1, player])
 expState = Exploration(game, bigMap, player, [enemy1], [enemy1, player])
 invState = InventoryMenu(game, bigMap, player, [enemy1], [enemy1, player])
+
+print(bigMap.getFullCover())
+print(bigMap.getHalfCover())
 game.enterState(expState)
 game.run()

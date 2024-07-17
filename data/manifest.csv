@@ -1,3 +1,5 @@
-1,16grass1.png,yes
-2,16Gravel1.png,no
-0,16labGrate1.png,yes
+1,16grass1.png,yes,none
+2,16Gravel1.png,no,none
+0,16labGrate1.png,yes,none
+3,16rock1x1.png,no,full
+4,16BunkerTile1.png,no,half
