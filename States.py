@@ -48,7 +48,87 @@ class Exploration(State):
     #         self.player = player
     #         self.target = target
     #         self.tilepath = tileMap.calcDistance
-    
+    class GrenadeTargeting(State):
+        def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list):
+            self.game = game
+
+            self.tileMap = tileMap
+            self.player = player
+            self.turnTakers = [self.player]
+            for turnTaker in otherTurnTakers:
+                self.turnTakers.append(turnTaker)
+            
+            #MENU UI
+            self.UIelements = pg.sprite.Group()
+    	    
+            self.blastRadius = 2
+            #get the affected squares
+            self.affectedSquares = []
+            self.centerTile = (3,3)
+
+        def getRays(self):
+            '''
+            returns list of every ray raycasted from grenade as a tuple of tuples of ints (a tuple containing both end points)
+            '''
+            #THE GIST: we make a square around the grenade, the width of the square is the diameter of the blast (2 * blast radius)
+            #for each tile in this square we raycast to it and check 2 things:
+                #we check if the tile's center is in the blast radius
+                #we check if the ray intersects cover
+                #apply the effects of any cover hit by the raycast and then carry out the damage (assuming the center was within the blast radius)
+            
+            #get the bounding tile of the square
+            topLeftLimit = (self.centerTile[0] - self.blastRadius , self.centerTile[1] - self.blastRadius)
+            bottomRightLimit = (self.centerTile[0] + self.blastRadius, self.centerTile[1] + self.blastRadius)
+            rays: list[tuple[tuple[int, int], tuple[int, int]]] = []
+            #check every tile in the bounding square
+            for row in range(topLeftLimit[0], bottomRightLimit[0]+1): #don't forget to include +1 because ranges don't count the end point
+                for col in range(topLeftLimit[1], bottomRightLimit[1]+1):
+                    #check that the tile is on the board (not too close to edge or corner)
+                    if row < 0 or col < 0: continue
+                    if row > self.tileMap.height - 1: continue
+                    if col > self.tileMap.width - 1: continue
+
+                    #now we make the ray (technically a segment, shut up)
+                    ray = (self.tileMap.tileToPixel(self.centerTile, center=True), self.tileMap.tileToPixel((row, col), center=True))
+                    rays.append(ray)
+            return rays
+
+        def drawRaysDebug(self):
+            for ray in self.getRays():
+                pg.draw.line(self.game.screen, "pink", ray[0], ray[1])
+
+        def update(self):
+            # #THE GIST: we make a square around the grenade, the width of the square is the diameter of the blast (2 * blast radius)
+            # #for each tile in this square we raycast to it and check 2 things:
+            #     #we check if the tile's center is in the blast radius
+            #     #we check if the ray intersects cover
+            #     #apply the effects of any cover hit by the raycast and then carry out the damage (assuming the center was within the blast radius)
+            
+            # #get the bounding tile of the square
+            # topLeftLimit = (self.centerTile[0] - self.blastRadius , self.centerTile[1] - self.blastRadius)
+            # bottomRightLimit = (self.centerTile[0] + self.blastRadius, self.centerTile[1] + self.blastRadius)
+
+            # #check every tile in the bounding square
+            # for row in range(topLeftLimit[0], bottomRightLimit[0]):
+            #     for col in range(topLeftLimit[1], bottomRightLimit[1]):
+            #         #check that the tile is on the board (not too close to edge or corner)
+            #         if row < 0 or col < 0: continue
+            #         if row > self.tileMap.height - 1: continue
+            #         if col > self.tileMap.width - 1: continue
+
+            #         #now we make the ray (technically a segment, shut up)
+            #         ray = (self.tileMap.tileToPixel(self.centerTile, center=True), self.tileMap.tileToPixel((row, col), center=True))
+            #         #check the ray for intersections
+
+            #         #check the distance of the ray
+            pass
+
+        def render(self):
+            self.tileMap.draw(self.game.screen)
+            for entity in self.turnTakers:
+                entity.rect.topleft = self.tileMap.tileToPixel(entity.tileLocation)
+                self.game.screen.blit(entity.image, entity.rect)
+            self.drawRaysDebug()
 
     def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
         self.game = game

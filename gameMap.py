@@ -95,7 +95,7 @@ class GameMap:
 
         self.offset: tuple[float, float] = (0,0)
     
-    def getTile(self, pos):
+    def getTile(self, pos) -> tuple[int, int]:
         '''
         takes an xy pixel position and returns a row,col of the tile that location resides in
         '''
@@ -103,7 +103,7 @@ class GameMap:
         tileCol = (pos[0] + self.offset[0]) // self.TILE_WIDTH
         return (tileRow, tileCol)
 
-    def tileToPixel(self, tileCoord, center=False):
+    def tileToPixel(self, tileCoord, center=False) -> tuple[int, int]:
         '''
         takes a tile row,col and spits out a pixel x,y for the top left of that tile
         '''
