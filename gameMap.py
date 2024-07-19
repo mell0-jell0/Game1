@@ -199,7 +199,7 @@ class GameMap:
         self.offset = newVal
         self.rect.topleft = (-1*newVal[0], -1*newVal[1])
     
-    def getFullCover(self):
+    def getFullCover(self) -> list[pg.rect.Rect]:
         '''
         yields a list of rects which are pieces of full cover
         '''
@@ -212,7 +212,7 @@ class GameMap:
                     outList.append(pg.rect.Rect(topleft, width_Height))
         return outList
     
-    def getHalfCover(self):
+    def getHalfCover(self)  -> list[pg.rect.Rect]:
         '''
         yields a list of rects which are pieces of half cover
         '''

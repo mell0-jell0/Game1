@@ -49,6 +49,18 @@ class Exploration(State):
     #         self.target = target
     #         self.tilepath = tileMap.calcDistance
     class GrenadeTargeting(State):
+        def rayLength(self, ray: tuple[tuple[int,int], tuple[int, int]]):
+            '''
+            just the pythagorean theorem
+            '''
+            x1, y1 = ray[0]
+            x2, y2 = ray[1]
+
+            a = abs(x2 - x1)
+            b = abs(y2 - y1)
+
+            return math.sqrt(math.pow(a,2) + math.pow(b,2))
+        
         def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list):
             self.game = game
 
@@ -61,7 +73,7 @@ class Exploration(State):
             #MENU UI
             self.UIelements = pg.sprite.Group()
     	    
-            self.blastRadius = 2
+            self.tileBlastRadius = 2
             #get the affected squares
             self.affectedSquares = []
             self.centerTile = (3,3)
@@ -69,6 +81,7 @@ class Exploration(State):
         def getRays(self):
             '''
             returns list of every ray raycasted from grenade as a tuple of tuples of ints (a tuple containing both end points)
+            all rays have their starting point at the center of the grenade tile and their endpoint at the center of the tile that was raycast to
             '''
             #THE GIST: we make a square around the grenade, the width of the square is the diameter of the blast (2 * blast radius)
             #for each tile in this square we raycast to it and check 2 things:
@@ -77,8 +90,8 @@ class Exploration(State):
                 #apply the effects of any cover hit by the raycast and then carry out the damage (assuming the center was within the blast radius)
             
             #get the bounding tile of the square
-            topLeftLimit = (self.centerTile[0] - self.blastRadius , self.centerTile[1] - self.blastRadius)
-            bottomRightLimit = (self.centerTile[0] + self.blastRadius, self.centerTile[1] + self.blastRadius)
+            topLeftLimit = (self.centerTile[0] - self.tileBlastRadius , self.centerTile[1] - self.tileBlastRadius)
+            bottomRightLimit = (self.centerTile[0] + self.tileBlastRadius, self.centerTile[1] + self.tileBlastRadius)
             rays: list[tuple[tuple[int, int], tuple[int, int]]] = []
             #check every tile in the bounding square
             for row in range(topLeftLimit[0], bottomRightLimit[0]+1): #don't forget to include +1 because ranges don't count the end point
@@ -94,10 +107,86 @@ class Exploration(State):
             return rays
 
         def drawRaysDebug(self):
+            #I want to make sure that the shorter range rays aren't drawn over by the further ones, so I put in range and out of range in seperate lists and draw the longer ones first
+            inRange = []
+            OORange = []
             for ray in self.getRays():
-                pg.draw.line(self.game.screen, "pink", ray[0], ray[1])
+                if self.rayLength(ray) < (self.tileBlastRadius * self.tileMap.TILE_WIDTH) + self.tileMap.TILE_WIDTH // 2:
+                    inRange.append(ray)
+                else:
+                    OORange.append(ray)
+                pg.draw.circle(self.game.screen, "black", ray[1], 4)
+            
+            for ray in OORange:
+                pg.draw.line(self.game.screen, pg.Color(255,255,0), ray[0], ray[1])
+            
+            for ray in inRange:
+                pg.draw.line(self.game.screen, pg.Color(255,0,0), ray[0], ray[1])
+            
+            pg.draw.circle(self.game.screen, 
+                           "red", 
+                           self.tileMap.tileToPixel(self.centerTile, center=True),
+                           (self.tileBlastRadius * self.tileMap.TILE_WIDTH) + self.tileMap.TILE_WIDTH // 2,
+                           width=2)
+        
+        def getAffectedSquares(self):
+            '''
+            calls the getRays function and then check each ray against the cover rects returned by the tilemap.
+            returns the tiles that are fully exposed and the tiles that are only blocked by half cover
+            '''
+            rays = self.getRays()
+            exposedTiles: list[tuple[int, int]] = []
+            halfCoveredTiles: list[tuple[int, int]] = []
+            fullCoverRects = self.tileMap.getFullCover()
+            halfCoverRects = self.tileMap.getHalfCover()
+
+            for ray in rays:
+                #if ray is out of range skip it
+                if self.rayLength(ray) > (self.tileBlastRadius * self.tileMap.TILE_WIDTH) + self.tileMap.TILE_WIDTH //2:
+                    continue
+                
+                fullyCovered: bool = False
+                halfCovered: bool = False
+
+                for rect in fullCoverRects:
+                    if len(rect.clipline(ray)) != 0:
+                        #there is an intersection
+                        fullyCovered = True
+                        break
+                    
+                for rect in halfCoverRects:
+                    if len(rect.clipline(ray)) != 0:
+                        #the rect intersects the ray
+                        halfCovered = True
+                        break
+                
+                if (not fullyCovered) and (not halfCovered):
+                    exposedTiles.append(self.tileMap.getTile(ray[1]))
+                elif (not fullyCovered) and (halfCovered):
+                    halfCoveredTiles.append(self.tileMap.getTile(ray[1]))
+                else:
+                    pass
+                
+            return (exposedTiles, halfCoveredTiles)
+
+
+        def drawDebugAffectedSquares(self):
+            exposedIndicator = load_image("grenadeExposedIndicator.png")
+            halfCoverIndicator = load_image("grenadeHalfCoverIndicator.png")
+
+            exposed, halfCovered = self.getAffectedSquares()
+
+            for tile in exposed:
+                exposedIndicator[1].topleft = self.tileMap.tileToPixel(tile)
+                self.game.screen.blit(*exposedIndicator)
+            
+            for tile in halfCovered:
+                halfCoverIndicator[1].topleft = self.tileMap.tileToPixel(tile)
+                self.game.screen.blit(*halfCoverIndicator)
+
 
         def update(self):
+            self.centerTile = self.tileMap.getTile(pg.mouse.get_pos())
             # #THE GIST: we make a square around the grenade, the width of the square is the diameter of the blast (2 * blast radius)
             # #for each tile in this square we raycast to it and check 2 things:
             #     #we check if the tile's center is in the blast radius
@@ -105,8 +194,8 @@ class Exploration(State):
             #     #apply the effects of any cover hit by the raycast and then carry out the damage (assuming the center was within the blast radius)
             
             # #get the bounding tile of the square
-            # topLeftLimit = (self.centerTile[0] - self.blastRadius , self.centerTile[1] - self.blastRadius)
-            # bottomRightLimit = (self.centerTile[0] + self.blastRadius, self.centerTile[1] + self.blastRadius)
+            # topLeftLimit = (self.centerTile[0] - self.tileBlastRadius , self.centerTile[1] - self.tileBlastRadius)
+            # bottomRightLimit = (self.centerTile[0] + self.tileBlastRadius, self.centerTile[1] + self.tileBlastRadius)
 
             # #check every tile in the bounding square
             # for row in range(topLeftLimit[0], bottomRightLimit[0]):
@@ -121,14 +210,15 @@ class Exploration(State):
             #         #check the ray for intersections
 
             #         #check the distance of the ray
-            pass
 
         def render(self):
+            self.game.screen.fill("black")
             self.tileMap.draw(self.game.screen)
             for entity in self.turnTakers:
                 entity.rect.topleft = self.tileMap.tileToPixel(entity.tileLocation)
                 self.game.screen.blit(entity.image, entity.rect)
-            self.drawRaysDebug()
+            #self.drawRaysDebug()
+            self.drawDebugAffectedSquares()
 
     def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
         self.game = game
