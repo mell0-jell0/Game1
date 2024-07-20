@@ -73,7 +73,7 @@ class Exploration(State):
             #MENU UI
             self.UIelements = pg.sprite.Group()
     	    
-            self.tileBlastRadius = 2
+            self.tileBlastRadius = 3
             #get the affected squares
             self.affectedSquares = []
             self.centerTile = (3,3)
@@ -144,7 +144,7 @@ class Exploration(State):
                 #if ray is out of range skip it
                 if self.rayLength(ray) > (self.tileBlastRadius * self.tileMap.TILE_WIDTH) + self.tileMap.TILE_WIDTH //2:
                     continue
-                
+
                 fullyCovered: bool = False
                 halfCovered: bool = False
 
@@ -305,6 +305,68 @@ class Exploration(State):
                 #pg.draw.circle(self.game.screen, "pink", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//3)
 
         self.UIelements.draw(self.game.screen)
+
+class ExplorationTurnTransition(State):
+    def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list):
+        self.game = game
+
+        self.tileMap = tileMap
+        self.player = player
+        self.otherTurnTakers = otherTurnTakers
+        self.entities = entities
+    
+        self.textBanner = Button("Encounter Started", "white", "black", self.game.screen.get_rect().height // 7)
+        self.textBanner.rect.centerx = self.game.screen.get_rect().centerx
+        self.textBanner.rect.bottom = 0
+
+        #this is basic kinematics, however I want there to be "energy dissipated" during the bounce, so I need a second equation for after the bounce
+        self.textVelocity = 1300 #velocity is down in pixel/sec
+        self.textAcc = 900 # pixel/sec^2
+        self.downEqn = lambda x : 0.5 * math.pow(x, 2)*self.textAcc + self.textVelocity*x + 0 #again, basic kinematic equation
+        self.velocityImpact = 0
+        self.upEqn = lambda x : 0.5 * math.pow(x, 2)*self.textAcc + (self.velocityImpact * -0.6)*x + self.game.screen.get_rect().height #basic kinematic equation, but with the velocity at impact reversed and diminished
+
+        #animation variables
+        self.timer = 0
+        self.bounced = False
+        self.returned = False
+        #should take one second to reach the top
+    def process(self, events: list[pg.event.Event]):
+        pass
+
+    def update(self):
+        # # fill this in with a quadratic equation -1(t-0)(t-3) with a multiplier out front to get the height of the arc to be right
+        # self.textBanner.rect.bottom += self.textVelocity * (self.game.clock.get_time() / 1000)
+        # self.textVelocity += self.textAcc * (self.game.clock.get_time() / 1000)
+        # if self.textBanner.rect.bottom >= self.game.screen.get_rect().bottom:
+        #     self.textBanner.rect.bottom = self.game.screen.get_rect().bottom
+        #     self.textVelocity = (self.textVelocity * -0.6)
+        #     self.bounced = True
+        # if self.bounced and self.textBanner.rect.top <= 0:
+        #     self.textBanner.rect.top = 0
+
+
+        self.timer += self.game.clock.get_time()
+        if self.returned:
+            if self.timer >= 2000:
+                pass#print("go to next state")
+            return
+        if not self.bounced:
+            self.textBanner.rect.bottom = int(self.downEqn(self.timer / 1000))
+            if self.textBanner.rect.bottom >= self.game.screen.get_rect().height:
+                self.bounced = True
+                self.velocityImpact = self.textVelocity + ((self.timer / 1000)* self.textAcc)
+                self.timer = 0
+        else:
+            self.timer += self.game.clock.get_time()
+            self.textBanner.rect.bottom = int(self.upEqn(self.timer / 1000))
+            if self.textBanner.rect.top <= 0 + 30:
+                self.returned = True
+                self.timer = 0
+    
+    def render(self):
+        self.game.screen.fill("black")
+        self.game.screen.blit(self.textBanner.image, self.textBanner.rect)
 
 
 class TurnControl(State):
