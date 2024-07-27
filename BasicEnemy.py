@@ -7,17 +7,19 @@ class BasicEnemy(pg.sprite.Sprite):
 
     maybe i should make another class entity which this one inherits from. entity type could be a member of entity.
     '''
-    def __init__(self, imgName):
+    def __init__(self, imgName, location):
         pg.sprite.Sprite.__init__(self) #call sprite constructor
         #rendering information
         self.image, self.rect = load_image(imgName)
         self.crossHair = load_image("crossHair1.png")
 
         #game logic information
-        self.tileLocation = (4,4)
+        self.tileLocation = location
         self.eType = entityType.ENEMY
         self.engageRange = 10
         self.hp = 10
+
+        self.engageRange = 4
 
     def takeTurn(self, map, player):
         #loop to pick a random move by 1 square

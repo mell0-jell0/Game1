@@ -43,11 +43,102 @@ class Exploration(State):
     '''
     free roam tile map exploration. you walk where you click and you can interact with characters and items in this mode. triggers Turn control when within range of enemy. will also be able to trigger fishing later
     '''
-    # class pathWalk:
-    #     def __init__(self, player, target, tileMap: GameMap):
-    #         self.player = player
-    #         self.target = target
-    #         self.tilepath = tileMap.calcDistance
+    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list) -> None:
+        self.game = game
+
+        self.tileMap = tileMap
+        self.player = player
+        self.enemies = enemies
+        self.friendlies = friendlies
+        self.turnTakers = [self.player]
+        for turnTaker in enemies:
+            self.turnTakers.append(turnTaker)
+        
+        #MENU UI
+        self.UIelements = pg.sprite.Group()
+
+        self.inventoryButton = Button("Inventory")
+        self.inventoryButton.rect.topright = self.game.screen.get_rect().topright
+
+        self.hpIndicator = Button(f"HP: {self.player.health}", "red", "black")
+        self.hpIndicator.rect.topright = self.inventoryButton.rect.bottomright
+
+        self.interactables = interactables # check to see if I should use sprite groups instead or something
+
+        self.UIelements.add((self.inventoryButton, self.hpIndicator))
+
+        #movement handling variables
+        self.path : deque = deque()
+        self.moveTarget: None | tuple[int, int] = None
+
+        #move animation variables
+        self.animProgress = 0 
+        self.timePerTile = 250 #in ms
+
+    
+    def process(self, events: list[pg.event.Event]):
+        for event in events:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+                if self.tileMap.rect.collidepoint(event.pos):
+                    self.moveTarget = self.tileMap.getTile(event.pos)
+                    print("clicked on map and got path")
+                else:
+                    print("didn't click on map")
+
+    def update(self):
+        for turnTaker in self.turnTakers:
+            if turnTaker == self.player: continue
+            if isinstance(turnTaker, BasicEnemy):
+                xDist = abs(turnTaker.tileLocation[1] - self.player.tileLocation[1]) #remember flip xy rowcol
+                yDist = abs(turnTaker.tileLocation[0] - self.player.tileLocation[0])
+                if xDist <= turnTaker.engageRange and yDist <= turnTaker.engageRange:
+                    self.game.enterState(ExplorationTurnTransition(self.game, self.tileMap, self.player, self.enemies, self.friendlies, []))
+
+        if self.moveTarget == None and len(self.path) == 0: #no path to walk
+            pass
+        elif self.moveTarget != None and len(self.path) ==0: #new target, get the new path
+            self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
+        elif self.moveTarget != None and len(self.path) != 0: #active target and path
+            if self.moveTarget == self.path[-1]: #path is active for current target
+                #animate normally until end of path
+                self.animProgress += self.game.clock.get_time()
+                if self.animProgress >= self.timePerTile:
+                    self.animProgress = 0
+                    self.player.tileLocation = self.path[0]
+                    self.path.popleft()
+            else: #target has changed from the old path
+                if self.animProgress == 0: #if at break in path, update
+                    self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
+                else: #if not at break in path, keep animating
+                    self.animProgress += self.game.clock.get_time()
+                    if self.animProgress >= self.timePerTile:
+                        self.animProgress = 0
+                        self.player.tileLocation = self.path[0]
+                        self.path.popleft()
+        
+
+    def render(self):
+        PATH_THICKNESS = 2
+        PATH_COLOR = "pink"
+        for actor in self.turnTakers:
+            actor.rect.topleft = self.tileMap.tileToPixel(actor.tileLocation)
+
+        self.tileMap.draw(self.game.screen)
+        self.tileMap.drawCoverDebug(self.game.screen)
+        for actor in self.turnTakers:
+            self.game.screen.blit(actor.image, actor.rect)
+        
+        for idx, tile in enumerate(self.path):
+            if tile == self.path[-1]:
+                pg.draw.circle(self.game.screen, "green", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//4)
+            else:
+                startPixel = self.tileMap.tileToPixel(tile, center=True)
+                endPixel = self.tileMap.tileToPixel(self.path[idx+1], center=True)
+                pg.draw.line(self.game.screen, PATH_COLOR, startPixel, endPixel, width=PATH_THICKNESS)
+                #pg.draw.circle(self.game.screen, "pink", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//3)
+
+        self.UIelements.draw(self.game.screen)
+
     class GrenadeTargeting(State):
         def rayLength(self, ray: tuple[tuple[int,int], tuple[int, int]]):
             '''
@@ -61,13 +152,13 @@ class Exploration(State):
 
             return math.sqrt(math.pow(a,2) + math.pow(b,2))
         
-        def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list):
+        def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list):
             self.game = game
 
             self.tileMap = tileMap
             self.player = player
             self.turnTakers = [self.player]
-            for turnTaker in otherTurnTakers:
+            for turnTaker in enemies:
                 self.turnTakers.append(turnTaker)
             
             #MENU UI
@@ -214,111 +305,27 @@ class Exploration(State):
         def render(self):
             self.game.screen.fill("black")
             self.tileMap.draw(self.game.screen)
-            for entity in self.turnTakers:
-                entity.rect.topleft = self.tileMap.tileToPixel(entity.tileLocation)
-                self.game.screen.blit(entity.image, entity.rect)
+            for enemy in self.turnTakers:
+                enemy.rect.topleft = self.tileMap.tileToPixel(enemy.tileLocation)
+                self.game.screen.blit(enemy.image, enemy.rect)
             #self.drawRaysDebug()
             self.drawDebugAffectedSquares()
 
-    def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
-        self.game = game
-
-        self.tileMap = tileMap
-        self.player = player
-        self.turnTakers = [self.player]
-        for turnTaker in otherTurnTakers:
-            self.turnTakers.append(turnTaker)
-        
-        #MENU UI
-        self.UIelements = pg.sprite.Group()
-
-        self.inventoryButton = Button("Inventory")
-        self.inventoryButton.rect.topright = self.game.screen.get_rect().topright
-
-        self.hpIndicator = Button(f"HP: {self.player.health}", "red", "black")
-        self.hpIndicator.rect.topright = self.inventoryButton.rect.bottomright
-
-        self.entities = entities # check to see if I should use sprite groups instead or something
-
-        self.UIelements.add((self.inventoryButton, self.hpIndicator))
-
-        #movement handling variables
-        self.path : deque = deque()
-        self.moveTarget: None | tuple[int, int] = None
-
-        #move animation variables
-        self.animProgress = 0 
-        self.timePerTile = 250 #in ms
-
-    
-    def process(self, events: list[pg.event.Event]):
-        for event in events:
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
-                if self.tileMap.rect.collidepoint(event.pos):
-                    self.moveTarget = self.tileMap.getTile(event.pos)
-                    print("clicked on map and got path")
-                else:
-                    print("didn't click on map")
-
-    def update(self):
-        if self.moveTarget == None and len(self.path) == 0: #no path to walk
-            pass
-        elif self.moveTarget != None and len(self.path) ==0: #new target, get the new path
-            self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
-        elif self.moveTarget != None and len(self.path) != 0: #active target and path
-            if self.moveTarget == self.path[-1]: #path is active for current target
-                #animate normally until end of path
-                self.animProgress += self.game.clock.get_time()
-                if self.animProgress >= self.timePerTile:
-                    self.animProgress = 0
-                    self.player.tileLocation = self.path[0]
-                    self.path.popleft()
-            else: #target has changed from the old path
-                if self.animProgress == 0: #if at break in path, update
-                    self.path = self.tileMap.getPath(self.player.tileLocation, self.moveTarget)
-                else: #if not at break in path, keep animating
-                    self.animProgress += self.game.clock.get_time()
-                    if self.animProgress >= self.timePerTile:
-                        self.animProgress = 0
-                        self.player.tileLocation = self.path[0]
-                        self.path.popleft()
-        
-
-    def render(self):
-        PATH_THICKNESS = 2
-        PATH_COLOR = "pink"
-        for actor in self.turnTakers:
-            actor.rect.topleft = self.tileMap.tileToPixel(actor.tileLocation)
-
-        self.tileMap.draw(self.game.screen)
-        self.tileMap.drawCoverDebug(self.game.screen)
-        for actor in self.turnTakers:
-            self.game.screen.blit(actor.image, actor.rect)
-        
-        for idx, tile in enumerate(self.path):
-            if tile == self.path[-1]:
-                pg.draw.circle(self.game.screen, "green", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//4)
-            else:
-                startPixel = self.tileMap.tileToPixel(tile, center=True)
-                endPixel = self.tileMap.tileToPixel(self.path[idx+1], center=True)
-                pg.draw.line(self.game.screen, PATH_COLOR, startPixel, endPixel, width=PATH_THICKNESS)
-                #pg.draw.circle(self.game.screen, "pink", self.tileMap.tileToPixel(tile, center=True), self.tileMap.TILE_WIDTH//3)
-
-        self.UIelements.draw(self.game.screen)
-
 class ExplorationTurnTransition(State):
-    def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list):
+    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list):
         self.game = game
 
         self.tileMap = tileMap
         self.player = player
-        self.otherTurnTakers = otherTurnTakers
-        self.entities = entities
+        self.enemies = enemies
+        self.friendlies = friendlies
+        self.interactables = interactables
     
         self.textBanner = Button("Encounter Started", "white", "black", self.game.screen.get_rect().height // 7)
         self.textBanner.rect.centerx = self.game.screen.get_rect().centerx
         self.textBanner.rect.bottom = 0
 
+        self.bgImage = self.game.screen.copy()
         #this is basic kinematics, however I want there to be "energy dissipated" during the bounce, so I need a second equation for after the bounce
         self.textVelocity = 1300 #velocity is down in pixel/sec
         self.textAcc = 900 # pixel/sec^2
@@ -349,6 +356,7 @@ class ExplorationTurnTransition(State):
         self.timer += self.game.clock.get_time()
         if self.returned:
             if self.timer >= 2000:
+                self.game.enterState(TurnControl(self.game, self.tileMap, self.player, self.enemies, self.friendlies, []))
                 pass#print("go to next state")
             return
         if not self.bounced:
@@ -365,20 +373,22 @@ class ExplorationTurnTransition(State):
                 self.timer = 0
     
     def render(self):
-        self.game.screen.fill("black")
+        self.game.screen.blit(self.bgImage, (0,0))
         self.game.screen.blit(self.textBanner.image, self.textBanner.rect)
 
 
 class TurnControl(State):
     ## substates should just be able to use the State class. Im not sure how arbitrary nesting of code will work. If I was just doing one level deep I would make an enum and use switch case for the logic but that doesn't nest well. you end up with a million switch cases nested. I want something that can nest arbitrarily but that is also lightweight. I would just use the state like I have right now, but the switching makes it really clunky. I also don't know how to do persistent state.
     '''Does the turn based tactical handling like dnd encounters. Not exclusively combat. there are plans for negotiating and escaping.'''
-    def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list) -> None:
+    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies, interactables: list) -> None:
         self.game = game
 
         self.tileMap = tileMap
         self.player = player
+        self.enemies = enemies
+        self.friendlies = friendlies
         self.turnTakers = [self.player]
-        for turnTaker in otherTurnTakers:
+        for turnTaker in enemies:
             self.turnTakers.append(turnTaker)
         
         self.currentTurn = 0
@@ -412,8 +422,8 @@ class TurnControl(State):
         self.crossHairMarker = load_image("crossHair1.png")
         self.shouldDrawCrossHairMarker = False
         #self.crossHairMarker[0]
-        self.entities = entities # check to see if I should use sprite groups instead or something
-            #my current thinking is that I will check clicks to see if they are on something in the entities list, and if they are, then I will check to see if that entity is interactable and what it's interaction methods are BTW ALT + Z TOGGLES LINE WRAPPING. USEFUL FOR COMMENTS LIKE THIS
+        self.interactables = interactables # check to see if I should use sprite groups instead or something
+            #my current thinking is that I will check clicks to see if they are on something in the interactables list, and if they are, then I will check to see if that enemy is interactable and what it's interaction methods are BTW ALT + Z TOGGLES LINE WRAPPING. USEFUL FOR COMMENTS LIKE THIS
 
         self.UIelements.add((self.turnIndicator, self.actionPointsIndicator, self.inventoryButton, self.nextTurnButton, self.hpIndicator))
 
@@ -452,17 +462,17 @@ class TurnControl(State):
         if self.turnTakers[self.currentTurn] != self.player: return False
         ####HANDLE CLICKS THAT HAPPEN OVER MAP
         elif self.tileMap.rect.collidepoint(pos):
-            ####CHECK CLICKS ON ENTITIES
+            ####CHECK CLICKS ON interactables
             clickedTile = self.tileMap.getTile(pos)
-            for entity in self.entities:
-                if entity.tileLocation == clickedTile:
+            for enemy in self.enemies:
+                if enemy.tileLocation == clickedTile:
                     #Handle confirmed click
                     if self.lastClickedTile == clickedTile and self.player.actionPoints >= 2: 
-                        print("blamo, confirm clicked on an entity")
+                        print("blamo, confirm clicked on an enemy")
                         self.player.actionPoints -= 2
                         return True
                     self.shouldDrawCrossHairMarker = True
-                    print("entity was clicked")
+                    print("enemy was clicked")
                     self.crossHairMarker[1].topleft = self.tileMap.tileToPixel(self.tileMap.getTile(pos))
                     self.lastClickedTile = clickedTile
                     return True
@@ -525,14 +535,14 @@ class TurnControl(State):
 
 
 class InventoryMenu(State):
-    def __init__(self, game, tileMap: GameMap, player: Player, otherTurnTakers: list, entities: list):
+    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list):
         self.game = game
         self.tileMap = tileMap
         self.player = player
         self.allTurnTakers = [player]
-        for turnTaker in otherTurnTakers:
+        for turnTaker in enemies:
             self.allTurnTakers.append(turnTaker)
-        self.entities = entities
+        self.interactables = interactables
 
         self.menuRegion = pg.rect.Rect(0, 0, game.WIN_WIDTH // 2, game.WIN_HEIGHT)
         self.menuRegion.topright = game.screen.get_rect().topright

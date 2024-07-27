@@ -60,19 +60,19 @@ item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], 
 
 player = Player("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
 player.equip(None)
-enemy1 = BasicEnemy("basicEnemy.png")
+enemy1 = BasicEnemy("basicEnemy.png", (7,8))
 
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 
 
-turnState = TurnControl(game, bigMap, player, [enemy1], [enemy1, player])
-expState = Exploration(game, bigMap, player, [enemy1], [enemy1, player])
-invState = InventoryMenu(game, bigMap, player, [enemy1], [enemy1, player])
-grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [enemy1, player])
-transitionState = ExplorationTurnTransition(game, bigMap, player, [enemy1], [enemy1, player])
+turnState = TurnControl(game, bigMap, player, [enemy1], [], [])
+expState = Exploration(game, bigMap, player, [enemy1], [], [])
+invState = InventoryMenu(game, bigMap, player, [enemy1], [], [])
+grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], [enemy1, player])
+transitionState = ExplorationTurnTransition(game, bigMap, player, [enemy1], [], [enemy1, player])
 
 print(bigMap.getFullCover())
 print(bigMap.getHalfCover())
-game.enterState(transitionState)
+game.enterState(expState)
 game.run()
