@@ -448,6 +448,13 @@ class TurnControl(State):
                 print("testing state transitions")
                 self.game.changeState(StartMenu(self.game))
     
+    def resolveAttack(self, attacker, target, weapon, map):
+        #get the cover rects
+        #cast line between attacker and target
+        #check range for max range and roll thresholds
+        #roll die
+        #resolve effects, deal damage, reduce ammo or whatever, play particle effect
+        pass
     def handleClick(self, pos: tuple[float, float]):
         self.shouldDrawCrossHairMarker = False
 
@@ -458,6 +465,8 @@ class TurnControl(State):
             #do the next turn thing
             self.nextTurn()
             return True
+        if self.inventoryButton.rect.collidepoint(pos):
+            self.game.enterState(InventoryMenu(self.game, self.tileMap, self.player, self.enemies, self.friendlies, self.interactables))
         
         if self.turnTakers[self.currentTurn] != self.player: return False
         ####HANDLE CLICKS THAT HAPPEN OVER MAP
@@ -539,7 +548,7 @@ class InventoryMenu(State):
         self.game = game
         self.tileMap = tileMap
         self.player = player
-        self.allTurnTakers = [player]
+        self.allTurnTakers = [player]   
         for turnTaker in enemies:
             self.allTurnTakers.append(turnTaker)
         self.interactables = interactables
@@ -556,7 +565,7 @@ class InventoryMenu(State):
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 print("should be popping inventory state from stack when state transitions are hooked up right")
-                #self.game.stateStack.pop()
+                self.game.stateStack.pop()
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
                 #default to popup
                 if self.activePopup != None:
@@ -621,3 +630,4 @@ class InventoryMenu(State):
         #render the active popup
         if self.activePopup != None:
             self.activePopup.draw(self.game.screen)
+    

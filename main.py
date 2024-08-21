@@ -5,6 +5,7 @@ import pygame as pg
 from utility import *
 from GameMap import *
 from Player import *
+from Character import Character
 from Item import *
 #from TurnController import *
 from States import *
@@ -58,19 +59,20 @@ bigMap = GameMap("manifest.csv", "testmap.csv")
 item1 = Item("bolty1.png", "placeholder type", Popup(["option 1", "option 2"], [fa, fb]))
 item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], [fc, fd]))
 
-player = Player("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
-player.equip(None)
+#player = Character("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
+player = Character("16guySmaller.png", 10, pg.sprite.Group([item1, item2]))
+player.equip(item1)
 enemy1 = BasicEnemy("basicEnemy.png", (7,8))
 
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 
 
-turnState = TurnControl(game, bigMap, player, [enemy1], [], [])
+#turnState = TurnControl(game, bigMap, player, [enemy1], [], [])
 expState = Exploration(game, bigMap, player, [enemy1], [], [])
 invState = InventoryMenu(game, bigMap, player, [enemy1], [], [])
 grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], [enemy1, player])
-transitionState = ExplorationTurnTransition(game, bigMap, player, [enemy1], [], [enemy1, player])
+#transitionState = ExplorationTurnTransition(game, bigMap, player, [enemy1], [], [enemy1, player])
 
 print(bigMap.getFullCover())
 print(bigMap.getHalfCover())

@@ -4,7 +4,6 @@ from utility import *
 
 
 
-
 class Item(pg.sprite.Sprite):
     def __init__(self, imgName, type, popup: Popup | None = None, description="generic item") -> None:
         super().__init__()
@@ -18,10 +17,12 @@ class Item(pg.sprite.Sprite):
 
 #if its a weapon it can deal damage and needs to handle that kind of logic
 
+from Character import Attackable
 class Weapon(Item):
-    def __init__(self, imgName, type,  damage, maxRange, description="generic item",) -> None:
+    def __init__(self, imgName, type,  damage, maxRange, description="generic weapon") -> None:
         super().__init__(imgName, type, description=description)
         self.damage = damage
         self.maxRange = maxRange
     #melee or ranged
-    
+    def attack(self, target: Attackable):
+        target.health -= 2
