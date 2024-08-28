@@ -56,12 +56,13 @@ fc = lambda : print("lambda option 1")
 fd = lambda : print("lambda option 2")
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-item1 = Item("bolty1.png", "placeholder type", Popup(["option 1", "option 2"], [fa, fb]))
-item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], [fc, fd]))
+weapon1 = Weapon("bolty1.png", "weapon")
+item1 = Item("bolty1.png", "placeholder type")
+item2 = Item("medKit1.png", "placeholder type")
 
 #player = Character("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
 player = Player("16guySmaller.png", 10, pg.sprite.Group([item1, item2]))
-player.equip(item1)
+player.equip(weapon1)
 enemy1 = BasicEnemy("basicEnemy.png", (7,8))
 
 cameraOffset = (-400,-80)

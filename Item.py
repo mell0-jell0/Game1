@@ -2,27 +2,32 @@ import math
 from utility import *
 
 
-
-
 class Item(pg.sprite.Sprite):
-    def __init__(self, imgName, type, popup: Popup | None = None, description="generic item") -> None:
+    def __init__(self, imgName, type, description="generic item") -> None:
         super().__init__()
         self.image, self.rect = load_image(imgName)
-        self.type = type
         self.description = description
-        self.popup = popup
-    def onClick(self):
-        print("onClick not implemented")
 
 
 #if its a weapon it can deal damage and needs to handle that kind of logic
 
-from Character import Attackable
 class Weapon(Item):
-    def __init__(self, imgName, type,  damage, maxRange, description="generic weapon") -> None:
-        super().__init__(imgName, type, description=description)
-        self.damage = damage
-        self.maxRange = maxRange
-    #melee or ranged
-    def attack(self, target: Attackable):
-        target.health -= 2
+    '''asbtract class for weapon types so that they can be equipped'''
+    def __init__(self, imgName, type, description="generic item") -> None:
+        super().__init__(imgName, type, description)
+
+class RangedWeapon(Item):
+    def __init__(self, imgName, type, description="generic item") -> None:
+        super().__init__(imgName, type, description)
+
+    def rollToDmg(self, roll:int, range:float) -> int:
+        print("NOTICE: roll to damage not implemented yet")
+        return 1
+
+class MeleeWeapon(Item):
+    def __init__(self, imgName, type, description="generic item") -> None:
+        super().__init__(imgName, type, description)
+
+    def getDamage(self, roll: int) -> int:
+        print("NOTICE: getDamage for melee weapons not imlemented")
+        return 1

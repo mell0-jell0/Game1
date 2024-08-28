@@ -20,6 +20,6 @@ class Player(pg.sprite.Sprite):
 
     def moveTo(self, tile: tuple[int, int]):
         self.tileLocation = tile
-        
+
     def draw(self, screen: pg.surface.Surface):
         screen.blit(self.image, self.rect)
