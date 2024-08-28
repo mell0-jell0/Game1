@@ -1,4 +1,5 @@
 from utility import *
+from typing import Protocol
 #all characters have sprite, hp, inventory, and equipped items
 '''sprite is the basic type that all the things inherit from. they get drawn, thats the bare minimum. anything further than that has it's type specified.'''
 

@@ -60,7 +60,7 @@ item1 = Item("bolty1.png", "placeholder type", Popup(["option 1", "option 2"], [
 item2 = Item("medKit1.png", "placeholder type", Popup(["option 1", "option 2"], [fc, fd]))
 
 #player = Character("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
-player = Character("16guySmaller.png", 10, pg.sprite.Group([item1, item2]))
+player = Player("16guySmaller.png", 10, pg.sprite.Group([item1, item2]))
 player.equip(item1)
 enemy1 = BasicEnemy("basicEnemy.png", (7,8))
 
