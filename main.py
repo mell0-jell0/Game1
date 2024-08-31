@@ -8,7 +8,7 @@ from Player import *
 from Character import Character
 from Item import *
 #from TurnController import *
-from States import *
+from States.States import *
 '''
 ACKNOWLEDGEMENTS
 daFluffyPotato for inspiration and advice about coding
@@ -77,5 +77,5 @@ grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], 
 
 print(bigMap.getFullCover())
 print(bigMap.getHalfCover())
-game.enterState(expState)
+game.enterState(grenadeState)
 game.run()
