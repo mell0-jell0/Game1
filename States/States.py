@@ -3,6 +3,7 @@ import math
 from pygame.sprite import AbstractGroup
 from utility import *
 from Player import *
+from Character import *
 from BasicEnemy import *
 from GameMap import *
 
@@ -40,6 +41,15 @@ class StartMenu(State):
 
 
 class Exploration(State):
+    class ClickType(enum.Enum):
+        ENEMY = enum.auto()
+        NPC = enum.auto()
+        MAP_TILE = enum.auto()
+        INVALID = enum.auto()
+    
+    class Action:
+        def __init__(self) -> None:
+            pass
     '''
     free roam tile map exploration. you walk where you click and you can interact with characters and items in this mode. triggers Turn control when within range of enemy. will also be able to trigger fishing later
     '''
@@ -48,7 +58,7 @@ class Exploration(State):
 
         self.tileMap = tileMap
         self.player = player
-        self.enemies = enemies
+        self.enemies: list[Character] = enemies
         self.friendlies = friendlies
         self.turnTakers = [self.player]
         for turnTaker in enemies:
@@ -57,33 +67,108 @@ class Exploration(State):
         #MENU UI
         self.UIelements = pg.sprite.Group()
 
+        #bounding box for UI elements on right side of screen
+        self.UIbox = pg.rect.Rect(0,0,0,0)
+        screenRect = self.game.screen.get_rect()
+        self.UIbox.height = screenRect.height
+        self.UIbox.width = screenRect.width // 6
+        self.UIbox.topright = screenRect.topright
+
         self.inventoryButton = Button("Inventory")
-        self.inventoryButton.rect.topright = self.game.screen.get_rect().topright
+        self.inventoryButton.rect.topleft = self.UIbox.topleft
+        self.UIelements.add(self.inventoryButton)
 
         self.hpIndicator = Button(f"HP: {self.player.health}", "red", "black")
-        self.hpIndicator.rect.topright = self.inventoryButton.rect.bottomright
+        self.hpIndicator.rect.topleft = self.inventoryButton.rect.bottomleft
+        self.UIelements.add(self.hpIndicator)
+
+        self.pointsCostIndicator = Button(f"Action will consume: points", size=12)
+        self.pointsCostIndicator.rect.topleft = self.hpIndicator.rect.bottomleft
+        self.UIelements.add(self.pointsCostIndicator)
 
         self.interactables = interactables # check to see if I should use sprite groups instead or something
-
-        self.UIelements.add((self.inventoryButton, self.hpIndicator))
 
         #movement handling variables
         self.path : deque = deque()
         self.moveTarget: None | tuple[int, int] = None
 
+        #UI interaction variables
+        self.currClickType: tuple = tuple()
+        self.lastClickType: tuple = tuple()
         #move animation variables
         self.animProgress = 0 
         self.timePerTile = 250 #in ms
 
-    
+    def getClickType(self, clickPos: tuple[int, int]) -> tuple:
+        '''
+        function for classifying what was clicked on by the user for purposes of UI interaction
+        returns a tuple with the click type as well as a the thing that was clicked on
+        In the case of a game object, a reference to the object is returned
+        In the case of a map tile, the tuple for that tile is returned
+        '''
+        #first check if the click was over the map 
+        if not self.tileMap.rect.collidepoint(clickPos):
+            print("user did not click over map")
+            return self.ClickType.INVALID, None
+        else:
+            for enemy in self.enemies: # check if an enemy was click first
+                if self.tileMap.getTile(clickPos) == enemy.tileLocation:
+                    print("Enemy was clicked on")
+                    return self.ClickType.ENEMY, enemy
+            #if we fall through this far it was a click over map but not on enemy
+            print("click classified as map click")
+            return self.ClickType.MAP_TILE, self.tileMap.getTile(clickPos) 
+
     def process(self, events: list[pg.event.Event]):
         for event in events:
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
-                if self.tileMap.rect.collidepoint(event.pos):
-                    self.moveTarget = self.tileMap.getTile(event.pos)
-                    print("clicked on map and got path")
-                else:
-                    print("didn't click on map")
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT: #Click was made
+                self.lastClickType = self.currClickType
+                self.currClickType = self.getClickType(event.pos) 
+                if self.currClickType[0] == self.ClickType.INVALID: break #don't handle this event
+                if self.currClickType == self.lastClickType:
+                    match self.currClickType[0]:
+                        case self.ClickType.MAP_TILE:
+                            if self.tileMap.calcDistance(self.player.tileLocation, self.currClickType[1]) < 100000:
+                                print("The player confirmed a legal movement")
+                        case self.ClickType.ENEMY:
+                            sightline = (self.tileMap.tileToPixel(self.player.tileLocation, True), self.tileMap.tileToPixel(self.currClickType[1].tileLocation, True))
+                            unobstructed = True
+                            for coverRect in self.tileMap.getFullCover():
+                                if coverRect.clipline(sightline[0], sightline[1]) != tuple():
+                                    unobstructed = False
+                                    break
+                            if unobstructed:
+                                print("Player confirmed a legal attack")
+                #if the clicks are identical, then execute if able
+                #if the clicks are different, update the UI accordingly
+                    #how do we update the UI? update the  UI depending on the click that happened.
+                    #if enemy, check if can attack, check weapon stats to show
+                    #if tile, check if naviagable, if naviagable, show cost
+                    #if interactible TODO
+                if self.currClickType == self.lastClickType and self.lastClickType[0] != self.ClickType.INVALID:
+                    print("We should resolve the action if it is legal")\
+                
+                '''
+                Enemies
+                    show the click marker. show what the cost of the action is
+                    if second click, carry out attack
+                Tiles
+                    show move marker and path
+                    if second click, move them, implement pausing during path later
+                Interactibles
+                    give some sort of UI makr as to what kind of interaction will happen. For items that you can pick up, show a pick up icon, for containers show an open icon. for fishing spots show some sort of icon. 
+
+                Actions are things that the player can do for their turn. they include attacks, moves, and interacts. every action should have a description
+                on the first click you want to do checks and show the user what they are doing
+                on a repeat click you want to confirm, that is the basis of the interactions
+                need a way to display information about the action they may or may not be performing
+                we want to tell the user what they are about to do with words. we want to display the correct UI information as well
+                '''
+                # if self.tileMap.rect.collidepoint(event.pos):
+                #     self.moveTarget = self.tileMap.getTile(event.pos)
+                #     print("clicked on map and got path")
+                # else:
+                #     print("didn't click on map")
 
     def update(self):
         for turnTaker in self.turnTakers:
@@ -287,71 +372,6 @@ class Exploration(State):
                 self.game.screen.blit(enemy.image, enemy.rect)
             #self.drawRaysDebug()
             self.drawDebugAffectedSquares()
-
-class ExplorationTurnTransition(State):
-    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list):
-        self.game = game
-
-        self.tileMap = tileMap
-        self.player = player
-        self.enemies = enemies
-        self.friendlies = friendlies
-        self.interactables = interactables
-    
-        self.textBanner = Button("Encounter Started", "white", "black", self.game.screen.get_rect().height // 7)
-        self.textBanner.rect.centerx = self.game.screen.get_rect().centerx
-        self.textBanner.rect.bottom = 0
-
-        self.bgImage = self.game.screen.copy()
-        #this is basic kinematics, however I want there to be "energy dissipated" during the bounce, so I need a second equation for after the bounce
-        self.textVelocity = 1300 #velocity is down in pixel/sec
-        self.textAcc = 900 # pixel/sec^2
-        self.downEqn = lambda x : 0.5 * math.pow(x, 2)*self.textAcc + self.textVelocity*x + 0 #again, basic kinematic equation
-        self.velocityImpact = 0
-        self.upEqn = lambda x : 0.5 * math.pow(x, 2)*self.textAcc + (self.velocityImpact * -0.6)*x + self.game.screen.get_rect().height #basic kinematic equation, but with the velocity at impact reversed and diminished
-
-        #animation variables
-        self.timer = 0
-        self.bounced = False
-        self.returned = False
-        #should take one second to reach the top
-    def process(self, events: list[pg.event.Event]):
-        pass
-
-    def update(self):
-        # # fill this in with a quadratic equation -1(t-0)(t-3) with a multiplier out front to get the height of the arc to be right
-        # self.textBanner.rect.bottom += self.textVelocity * (self.game.clock.get_time() / 1000)
-        # self.textVelocity += self.textAcc * (self.game.clock.get_time() / 1000)
-        # if self.textBanner.rect.bottom >= self.game.screen.get_rect().bottom:
-        #     self.textBanner.rect.bottom = self.game.screen.get_rect().bottom
-        #     self.textVelocity = (self.textVelocity * -0.6)
-        #     self.bounced = True
-        # if self.bounced and self.textBanner.rect.top <= 0:
-        #     self.textBanner.rect.top = 0
-
-
-        self.timer += self.game.clock.get_time()
-        if self.returned:
-            if self.timer >= 2000:
-                self.game.enterState(TurnControl(self.game, self.tileMap, self.player, self.enemies, self.friendlies, []))
-                pass#print("go to next state")
-            return
-        if not self.bounced:
-            self.textBanner.rect.bottom = int(self.downEqn(self.timer / 1000))
-            if self.textBanner.rect.bottom >= self.game.screen.get_rect().height:
-                self.bounced = True
-                self.velocityImpact = self.textVelocity + ((self.timer / 1000)* self.textAcc)
-                self.timer = 0
-        else:
-            self.timer += self.game.clock.get_time()
-            self.textBanner.rect.bottom = int(self.upEqn(self.timer / 1000))
-            if self.textBanner.rect.top <= 0 + 30:
-                self.returned = True
-                self.timer = 0
-    
-    def render(self):
-        self.game.screen.blit(self.bgImage, (0,0))
-        self.game.screen.blit(self.textBanner.image, self.textBanner.rect)
 
 
 # class TurnControl(State):

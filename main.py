@@ -77,5 +77,5 @@ grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], 
 
 print(bigMap.getFullCover())
 print(bigMap.getHalfCover())
-game.enterState(grenadeState)
+game.enterState(expState)
 game.run()

@@ -12,7 +12,7 @@ class Player(pg.sprite.Sprite):
         self.inventory: pg.sprite.Group = inventory
         self.equipped: None | Weapon = None
         self.image, self.rect = load_image(imgName, scale=IMG_SCALE)
-        self.tileLocation = (0,0)
+        self.tileLocation = (1,7)
         self.actionPoints = 3
 
     def equip(self, weapon: Weapon | None):
