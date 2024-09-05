@@ -122,6 +122,7 @@ class Exploration(State):
     def process(self, events: list[pg.event.Event]):
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT: #Click was made
+                #TODO clean up all of this messy logic. maybe abstract out into action classes
                 self.lastClickType = self.currClickType
                 self.currClickType = self.getClickType(event.pos) 
                 if self.currClickType[0] == self.ClickType.INVALID: break #don't handle this event

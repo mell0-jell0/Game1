@@ -13,6 +13,17 @@ class MapEntity(pg.sprite.Sprite):
         self.rect = rect
         self.tileLocation = (0,0)
 
+class attackable(MapEntity):
+    def __init__(self, image, rect, maxHP):
+        super().__init__(image, rect)
+        self.tileLocation = (0,0)
+        self.maxHP = maxHP
+        self.currHP = maxHP
+
+class Inventory:
+    def __init__(self, items=[]) -> None:
+        self.items = items
+
 class Character(MapEntity):
     def __init__(self, image, rect):
         super().__init__(image, rect)
@@ -24,3 +35,15 @@ class Character(MapEntity):
 
     def equip(self, weapon: Weapon):
         self.equipped = weapon
+
+
+
+class Weapon:
+    def attack(self, attacker, defender, map, mapentities):
+        '''
+        check the legality of the attack
+        apply damage and effects to defender and all the other parties
+        '''
+
+class LevelState:
+    def __init__(self, player, enemies, npcs, interactibles, tilemap):
