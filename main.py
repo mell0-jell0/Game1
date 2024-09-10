@@ -4,11 +4,11 @@ import pygame as pg
 
 from utility import *
 from GameMap import *
-from Player import *
-from Character import Character
+from Entities import *
 from Item import *
-#from TurnController import *
 from States.States import *
+from States.exploration import *
+
 '''
 ACKNOWLEDGEMENTS
 daFluffyPotato for inspiration and advice about coding
@@ -61,18 +61,20 @@ item1 = Item("bolty1.png", "placeholder type")
 item2 = Item("medKit1.png", "placeholder type")
 
 #player = Character("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
-player = Player("16guySmaller.png", 10, pg.sprite.Group([item1, item2]))
-player.equip(weapon1)
-enemy1 = BasicEnemy("basicEnemy.png", (7,8))
+player = Player(*load_image("16GuySmaller.png"))
+player.setTileLocation((1,7))
+enemy1 = BasicEnemy(*load_image("basicEnemy.png"))
+enemy1.setTileLocation((9,9))
 
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 
+lvlState = LevelState(bigMap, [player, enemy1], player)
 
 #turnState = TurnControl(game, bigMap, player, [enemy1], [], [])
-expState = Exploration(game, bigMap, player, [enemy1], [], [])
-invState = InventoryMenu(game, bigMap, player, [enemy1], [], [])
-grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], [enemy1, player])
+expState = Exploration(game, lvlState, player)
+# invState = InventoryMenu(game, bigMap, player, [enemy1], [], [])
+# grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], [enemy1, player])
 #transitionState = ExplorationTurnTransition(game, bigMap, player, [enemy1], [], [enemy1, player])
 
 print(bigMap.getFullCover())

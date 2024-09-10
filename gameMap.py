@@ -2,7 +2,7 @@ from collections import deque
 from utility import *
 
 IMG_SCALE = 3
-DEBUG = True
+DEBUG = False
 tile = tuple[int, int]
 tileId = str
 class GameMap:
@@ -65,8 +65,9 @@ class GameMap:
             self.width: int = len(self.tileMap[0])
 
         self.rect = pg.Rect(0, 0, self.width * self.TILE_WIDTH, self.height * self.TILE_WIDTH) #rect containing map area
-        print(self.tileMap)
-        print(self.textureMap)
+        if DEBUG:
+            print(self.tileMap)
+            print(self.textureMap)
 
         '''
         create the adjacency list
@@ -91,7 +92,7 @@ class GameMap:
                         if navMap[self.tileMap[rowNum][colNum+1]] == "yes":
                             tileAdjacencies.append((rowNum, colNum+1))
                 self.adjList[(rowNum, colNum)] = tileAdjacencies
-        print(self.adjList)
+        if DEBUG: print(self.adjList)
 
         self.offset: tuple[float, float] = (0,0)
     
