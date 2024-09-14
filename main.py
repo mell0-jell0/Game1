@@ -7,7 +7,7 @@ WIN_HEIGHT = 720
 screen = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
 from utility import *
-from GameMap import *
+from gameMap import *
 from Entities import *
 from Item import *
 from States.States import *

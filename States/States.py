@@ -5,7 +5,7 @@ from utility import *
 from Player import *
 from Entities import *
 from BasicEnemy import *
-from GameMap import *
+from gameMap import *
 
 
 class State:

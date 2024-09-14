@@ -1,7 +1,7 @@
 from typing import Any
 from utility import *
 from Item import *
-from GameMap import *
+from gameMap import *
 
 '''
 Contains components used for entities and game logic
