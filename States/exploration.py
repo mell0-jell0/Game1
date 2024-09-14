@@ -2,11 +2,13 @@ import enum
 from States.States import State
 from GameMap import *
 from Entities import *
+from action import *
 
 class Exploration(State):
     class ClickType(enum.Enum):
         ENTITY = enum.auto()
         MAP_TILE = enum.auto()
+        BUTTON = enum.auto()
         INVALID = enum.auto()
     
     class Action:
@@ -80,6 +82,8 @@ class Exploration(State):
                 if self.currClickType[0] == self.ClickType.INVALID: break #don't handle this event
                 if self.currClickType[0] == self.ClickType.ENTITY:
                     if hasattr(self.currClickType[1], "attackable"): print("we clicked an attackable")
+                    # for action in actions if entity matches action then add action to available list
+                    break
                 if self.currClickType[0] == self.ClickType.MAP_TILE:
                     self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.currClickType[1])
 
@@ -136,6 +140,8 @@ class Exploration(State):
         
         self.drawPath()
         self.UIelements.draw(self.game.screen)
+        self.game.screen.blit(attackAction.availableButton, (0,0))
+        self.game.screen.blit(interactAction.availableButton, (0,attackAction.availableButton.get_rect().height))
 
     class GrenadeTargeting(State):
         def rayLength(self, ray: tuple[tuple[int,int], tuple[int, int]]):

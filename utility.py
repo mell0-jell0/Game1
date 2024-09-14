@@ -34,7 +34,7 @@ class Button(pg.sprite.Sprite):
     '''
     basic class for keeping track of button images and rects and drawing text
     '''
-    def __init__(self, text, textColor="black", bgColor="grey", size=30, callback = None) -> None:
+    def __init__(self, text, textColor: str | pg.color.Color="black", bgColor: str | pg.color.Color="grey", size=30, callback = None) -> None:
         self.textWriter = pg.font.Font(pg.font.get_default_font(), size)
         pg.sprite.Sprite.__init__(self)
         self.image = self.textWriter.render(text, 1, textColor, bgColor)
@@ -79,8 +79,3 @@ class Popup(pg.sprite.Sprite):
         for button in self.buttons:
             if button.rect.collidepoint(pos):
                 button.callback()
-
-class entityType(enum.Enum):
-    ENEMY = enum.auto()
-    OTHER = enum.auto()
-    #add interactable entities down here

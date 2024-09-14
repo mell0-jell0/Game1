@@ -1,6 +1,10 @@
 import os
 
 import pygame as pg
+pg.init()
+WIN_WIDTH = 1280
+WIN_HEIGHT = 720
+screen = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
 from utility import *
 from GameMap import *
@@ -19,12 +23,11 @@ My friend A. for convincing me to get started and keeping me accountable by aski
 
 
 class Game:
-    def __init__(self) -> None:
+    def __init__(self, screen) -> None:
         self.stateStack: list[State] = []
-        pg.init()
         self.WIN_WIDTH = 1280
         self.WIN_HEIGHT = 720
-        self.screen = pg.display.set_mode((self.WIN_WIDTH, self.WIN_HEIGHT))
+        self.screen = screen
         self.clock = pg.time.Clock()
         self.dt = 0
 
@@ -47,7 +50,7 @@ class Game:
         pg.quit()
 
 
-game = Game()
+game = Game(screen)
 def fa():
     print("option 1 pressed")
 def fb():
@@ -56,7 +59,7 @@ fc = lambda : print("lambda option 1")
 fd = lambda : print("lambda option 2")
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-weapon1 = Weapon("bolty1.png", "weapon")
+weapon1 = Weapon("bolty1.png", "weapon", lambda: print("resolve attack placeholder"))
 item1 = Item("bolty1.png", "placeholder type")
 item2 = Item("medKit1.png", "placeholder type")
 
@@ -65,7 +68,7 @@ player = Player(*load_image("16GuySmaller.png"))
 player.setTileLocation((1,7))
 enemy1 = BasicEnemy(*load_image("basicEnemy.png"))
 enemy1.setTileLocation((9,9))
-
+weapon1.resolveAttack()
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 
