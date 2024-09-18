@@ -65,3 +65,6 @@ class BasicEnemy(MapEntity):
     def __init__(self, image, rect):
         super().__init__(image, rect)
         self.attackable: Attackable = Attackable(maxHp=10)
+
+class Interactible:
+    pass

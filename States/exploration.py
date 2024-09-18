@@ -52,6 +52,8 @@ class Exploration(State):
         #UI interaction variables
         self.currClickType: tuple = tuple()
         self.lastClickType: tuple = tuple()
+        self.renderPopup = False
+        self.clickedEntity: MapEntity | None = None
         #move animation variables
         self.animProgress = 0 
         self.timePerTile = 250 #in ms
@@ -79,9 +81,23 @@ class Exploration(State):
                 #TODO clean up all of this messy logic. maybe abstract out into action classes
                 self.lastClickType = self.currClickType
                 self.currClickType = self.getClickType(event.pos) 
+                #Check for clicks that are dependent on the past click. I.e. double clicks on map, clicks on interaction popups
+                if self.clickedEntity != None:
+                   #need to maintain a list of the buttons so that I can iterate over them and check if they were clicked.
+                   # really need to  fix the action buttons and the button class. should separate the button class from the text class. Button should have method for checking for clicks and handling them. It should take images.
+                   pass 
+                #Reset data
+                self.clickedEntity = None
+                self.path.clear()
+                #Handle the new click
+                if self.currClickType == self.lastClickType:
+                    if self.currClickType[0] == self.ClickType.INVALID: break
+                    if self.currClickType[0] == self.ClickType.MAP_TILE: print("check if move is legal and move")
                 if self.currClickType[0] == self.ClickType.INVALID: break #don't handle this event
                 if self.currClickType[0] == self.ClickType.ENTITY:
                     if hasattr(self.currClickType[1], "attackable"): print("we clicked an attackable")
+                    self.renderPopup = True
+                    self.clickedEntity = self.currClickType[1]
                     # for action in actions if entity matches action then add action to available list
                     break
                 if self.currClickType[0] == self.ClickType.MAP_TILE:
@@ -140,8 +156,16 @@ class Exploration(State):
         
         self.drawPath()
         self.UIelements.draw(self.game.screen)
-        self.game.screen.blit(attackAction.availableButton, (0,0))
-        self.game.screen.blit(interactAction.availableButton, (0,attackAction.availableButton.get_rect().height))
+
+        #Draw interaction popups
+        if self.clickedEntity != None:
+            actionList: list[Action] = []
+            if hasattr(self.clickedEntity, "attackable"): actionList.append(attackAction)
+            if hasattr(self.clickedEntity, "interactable"): actionList.append(interactAction)
+            drawPointer = self.levelState.tileMap.tileToPixel(self.clickedEntity.tileLocation, center=True)
+            for action in actionList:
+                self.game.screen.blit(action.availableButton, drawPointer)
+                drawPointer = (drawPointer[0], drawPointer[1]+action.availableButton.get_height())
 
     class GrenadeTargeting(State):
         def rayLength(self, ray: tuple[tuple[int,int], tuple[int, int]]):
