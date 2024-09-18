@@ -10,8 +10,8 @@ class Action:
         self.description = description
         self.buttonWord = buttonWord
 
-        availButtonTextImg = Button(buttonWord, "white", pg.color.Color(30,30,30,150), self.availableImg[0].get_rect().height)
-        unavailButtonTextImg = Button(buttonWord, "grey", "black", self.unavailableImg[0].get_rect().height)
+        availButtonTextImg = TextImg(buttonWord, "white", pg.color.Color(30,30,30,150), self.availableImg[0].get_rect().height)
+        unavailButtonTextImg = TextImg(buttonWord, "grey", "black", self.unavailableImg[0].get_rect().height)
         availButtonWidth = availableImg[0].get_rect().width + availButtonTextImg.image.get_rect().width
         availButtonHeight = availableImg[0].get_rect().height
         unavailButtonWidth = unavailableImg[0].get_rect().width + unavailButtonTextImg.image.get_rect().width

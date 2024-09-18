@@ -33,15 +33,15 @@ class Exploration(State):
         self.UIbox.width = screenRect.width // 6
         self.UIbox.topright = screenRect.topright
 
-        self.inventoryButton = Button("Inventory")
+        self.inventoryButton = TextImg("Inventory")
         self.inventoryButton.rect.topleft = self.UIbox.topleft
         self.UIelements.add(self.inventoryButton)
 
-        self.hpIndicator = Button(f"HP: ", "red", "black")
+        self.hpIndicator = TextImg(f"HP: ", "red", "black")
         self.hpIndicator.rect.topleft = self.inventoryButton.rect.bottomleft
         self.UIelements.add(self.hpIndicator)
 
-        self.pointsCostIndicator = Button(f"Action will consume: points", size=12)
+        self.pointsCostIndicator = TextImg(f"Action will consume: points", size=12)
         self.pointsCostIndicator.rect.topleft = self.hpIndicator.rect.bottomleft
         self.UIelements.add(self.pointsCostIndicator)
 

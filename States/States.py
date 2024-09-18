@@ -25,7 +25,7 @@ class State:
 class StartMenu(State):
     def __init__(self, game) -> None:
         self.game = game
-        self.playButton = Button("Play")
+        self.playButton = TextImg("Play")
         self.playButton.rect.center = game.screen.get_rect().center
 
     def process(self, events):
@@ -98,7 +98,7 @@ class InventoryMenu(State):
 
         yDisplacement = 0
 
-        equippedText = Button("Equipped", "Black", "Pink", size=20)
+        equippedText = TextImg("Equipped", "Black", "Pink", size=20)
         equippedText.rect.topleft = self.menuRegion.topleft
         self.game.screen.blit(equippedText.image, equippedText.rect)
         yDisplacement+= equippedText.rect.height

@@ -30,7 +30,7 @@ def load_image(name, colorkey=None, scale=IMG_SCALE):
 
 pg.font.init()
 
-class Button(pg.sprite.Sprite):
+class TextImg(pg.sprite.Sprite):
     '''
     basic class for keeping track of button images and rects and drawing text
     '''
@@ -60,7 +60,7 @@ class Popup(pg.sprite.Sprite):
         self.buttons = pg.sprite.Group()
         for idx, text in enumerate(buttonText):
             #give buttons the matching callback in the operations list
-            self.buttons.add(Button(text, size=textSize, callback=operations[idx]))
+            self.buttons.add(TextImg(text, size=textSize, callback=operations[idx]))
     
     def draw(self, screen: pg.surface.Surface):
         yDisplacement = 0
