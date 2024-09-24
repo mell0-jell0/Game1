@@ -25,6 +25,7 @@ class Exploration(State):
         
         #MENU UI
         self.UIelements = pg.sprite.Group()
+        self.activeButtons: set[Button] = set()
 
         #bounding box for UI elements on right side of screen
         self.UIbox = pg.rect.Rect(0,0,0,0)
@@ -33,8 +34,9 @@ class Exploration(State):
         self.UIbox.width = screenRect.width // 6
         self.UIbox.topright = screenRect.topright
 
-        self.inventoryButton = TextImg("Inventory")
+        self.inventoryButton = Button(TextImg("Inventory").image, lambda: print("inventory button no callback"))
         self.inventoryButton.rect.topleft = self.UIbox.topleft
+        self.activeButtons.add(self.inventoryButton)
         self.UIelements.add(self.inventoryButton)
 
         self.hpIndicator = TextImg(f"HP: ", "red", "black")
@@ -65,6 +67,10 @@ class Exploration(State):
         In the case of a game object, a reference to the object is returned
         In the case of a map tile, the tuple for that tile is returned
         '''
+        #First process clicks on buttons
+        for button in self.activeButtons:
+            if button.rect.collidepoint(clickPos):
+                return (self.ClickType.BUTTON, button)
         #Check that click is over map
         if not self.levelState.tileMap.rect.collidepoint(clickPos): return (self.ClickType.INVALID, None)
         #Check for clicked entity
@@ -78,30 +84,47 @@ class Exploration(State):
     def process(self, events: list[pg.event.Event]):
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT: #Click was made
-                #TODO clean up all of this messy logic. maybe abstract out into action classes
-                self.lastClickType = self.currClickType
-                self.currClickType = self.getClickType(event.pos) 
-                #Check for clicks that are dependent on the past click. I.e. double clicks on map, clicks on interaction popups
-                if self.clickedEntity != None:
-                   #need to maintain a list of the buttons so that I can iterate over them and check if they were clicked.
-                   # really need to  fix the action buttons and the button class. should separate the button class from the text class. Button should have method for checking for clicks and handling them. It should take images.
-                   pass 
-                #Reset data
-                self.clickedEntity = None
-                self.path.clear()
-                #Handle the new click
-                if self.currClickType == self.lastClickType:
-                    if self.currClickType[0] == self.ClickType.INVALID: break
-                    if self.currClickType[0] == self.ClickType.MAP_TILE: print("check if move is legal and move")
-                if self.currClickType[0] == self.ClickType.INVALID: break #don't handle this event
-                if self.currClickType[0] == self.ClickType.ENTITY:
-                    if hasattr(self.currClickType[1], "attackable"): print("we clicked an attackable")
-                    self.renderPopup = True
-                    self.clickedEntity = self.currClickType[1]
-                    # for action in actions if entity matches action then add action to available list
-                    break
-                if self.currClickType[0] == self.ClickType.MAP_TILE:
-                    self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.currClickType[1])
+                self.currClickType = self.getClickType(event.pos)
+                match self.currClickType:
+                    case (self.ClickType.MAP_TILE, tile):
+                        assert(isinstance(tile, tuple))
+                        print(f"clicked map tile {tile}")
+                        self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
+
+                    case (self.ClickType.ENTITY, entity):
+                        assert(isinstance(entity, MapEntity))
+                        print(f"clicked entity {entity}")
+
+                    case (self.ClickType.INVALID, _):
+                        print("invalid click")
+
+                    case (self.ClickType.BUTTON, button):
+                        print(f"clicked button {button}")
+                        button.callback()
+                # #TODO clean up all of this messy logic. maybe abstract out into action classes
+                # self.lastClickType = self.currClickType
+                # self.currClickType = self.getClickType(event.pos) 
+                # if self.currClickType[0] == self.ClickType.BUTTON:
+                #     self.currClickType[1].callback()
+                #     continue
+                # if self.clickedEntity != None:
+                #    pass 
+                # #Reset data
+                # self.clickedEntity = None
+                # self.path.clear()
+                # #Handle the new click
+                # if self.currClickType == self.lastClickType:
+                #     if self.currClickType[0] == self.ClickType.INVALID: continue
+                #     if self.currClickType[0] == self.ClickType.MAP_TILE: print("check if move is legal and move")
+                # if self.currClickType[0] == self.ClickType.INVALID: continue#don't handle this event
+                # if self.currClickType[0] == self.ClickType.ENTITY:
+                #     if hasattr(self.currClickType[1], "attackable"): print("we clicked an attackable")
+                #     self.renderPopup = True
+                #     self.clickedEntity = self.currClickType[1]
+                #     # for action in actions if entity matches action then add action to available list
+                #     continue 
+                # if self.currClickType[0] == self.ClickType.MAP_TILE:
+                #     self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.currClickType[1])
 
     def update(self):
         #THIS IS THE PATH WALKING ALGORITHM
@@ -164,8 +187,8 @@ class Exploration(State):
             if hasattr(self.clickedEntity, "interactable"): actionList.append(interactAction)
             drawPointer = self.levelState.tileMap.tileToPixel(self.clickedEntity.tileLocation, center=True)
             for action in actionList:
-                self.game.screen.blit(action.availableButton, drawPointer)
-                drawPointer = (drawPointer[0], drawPointer[1]+action.availableButton.get_height())
+                self.game.screen.blit(action.availableButton.image, drawPointer)
+                drawPointer = (drawPointer[0], drawPointer[1]+action.availableButton.image.get_height())
 
     class GrenadeTargeting(State):
         def rayLength(self, ray: tuple[tuple[int,int], tuple[int, int]]):

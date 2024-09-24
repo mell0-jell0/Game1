@@ -17,13 +17,16 @@ class Action:
         unavailButtonWidth = unavailableImg[0].get_rect().width + unavailButtonTextImg.image.get_rect().width
         unavailButtonHeight = unavailableImg[0].get_rect().height
 
-        self.availableButton = pg.surface.Surface((availButtonWidth, availButtonHeight))
-        self.availableButton.blit(*availableImg)
+        availableSurf = pg.surface.Surface((availButtonWidth, availButtonHeight))
+        availableSurf.blit(*availableImg)
         #blit text next to the icon with same height
-        self.availableButton.blit(availButtonTextImg.image, (0+availableImg[0].get_rect().width,0))
-        self.unavailableButton = pg.surface.Surface((unavailButtonWidth, unavailButtonHeight))
-        self.unavailableButton.blit(*unavailableImg)
-        self.unavailableButton.blit(unavailButtonTextImg.image, (0+unavailableImg[0].get_rect().width,0))
+        availableSurf.blit(availButtonTextImg.image, (0+availableImg[0].get_rect().width,0))
+        unavailableSurf= pg.surface.Surface((unavailButtonWidth, unavailButtonHeight))
+        unavailableSurf.blit(*unavailableImg)
+        unavailableSurf.blit(unavailButtonTextImg.image, (0+unavailableImg[0].get_rect().width,0))
+
+        self.availableButton = Button(availableSurf, lambda : print("available button doesn't have callback"))
+        self.unavailableButton = Button(unavailableSurf, lambda : print("unavailable button doesn't have callback"))
 
 attackAction = Action(load_image("attackAvailableIcon.png", scale=1), 
                       load_image("attackUnavailableIcon.png", scale=1),

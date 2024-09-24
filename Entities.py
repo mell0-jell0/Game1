@@ -57,12 +57,14 @@ class Inventory:
 
 class Player(MapEntity):
     def __init__(self, image, rect):
+        pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
         self.inventory: Inventory = Inventory()
         self.attackable: Attackable = Attackable(maxHp=10)
 
 class BasicEnemy(MapEntity):
     def __init__(self, image, rect):
+        pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
         self.attackable: Attackable = Attackable(maxHp=10)
 
