@@ -55,6 +55,9 @@ class Inventory:
     '''
     pass
 
+class Interactable:
+    pass
+
 class Player(MapEntity):
     def __init__(self, image, rect):
         pg.sprite.Sprite.__init__(self)
@@ -67,6 +70,4 @@ class BasicEnemy(MapEntity):
         pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
         self.attackable: Attackable = Attackable(maxHp=10)
-
-class Interactible:
-    pass
+        self.interactable: Interactable = Interactable()

@@ -55,3 +55,8 @@ class Button(pg.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect()
         self.callback = callback
+
+class Popup:
+    def __init__(self, buttons, anchor) -> None:
+        self.buttons: list[Button] = buttons
+        self.anchor = anchor

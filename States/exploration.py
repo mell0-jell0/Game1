@@ -26,6 +26,7 @@ class Exploration(State):
         #MENU UI
         self.UIelements = pg.sprite.Group()
         self.activeButtons: set[Button] = set()
+        self.activePopup: Popup | None = None
 
         #bounding box for UI elements on right side of screen
         self.UIbox = pg.rect.Rect(0,0,0,0)
@@ -55,7 +56,7 @@ class Exploration(State):
         self.currClickType: tuple = tuple()
         self.lastClickType: tuple = tuple()
         self.renderPopup = False
-        self.clickedEntity: MapEntity | None = None
+
         #move animation variables
         self.animProgress = 0 
         self.timePerTile = 250 #in ms
@@ -85,6 +86,11 @@ class Exploration(State):
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT: #Click was made
                 self.currClickType = self.getClickType(event.pos)
+                #Reset tracking variables
+                self.path.clear()
+                self.activePopup = None
+                self.activeButtons.clear()
+
                 match self.currClickType:
                     case (self.ClickType.MAP_TILE, tile):
                         assert(isinstance(tile, tuple))
@@ -94,6 +100,19 @@ class Exploration(State):
                     case (self.ClickType.ENTITY, entity):
                         assert(isinstance(entity, MapEntity))
                         print(f"clicked entity {entity}")
+                        popupButtons: list = []
+                        if hasattr(entity, "attackable"):
+                            popupButtons.append(attackAction.availableButton)
+                        if hasattr(entity, "interactable"):
+                            popupButtons.append(interactAction.availableButton)
+                        
+                        self.activePopup = Popup(popupButtons, self.levelState.tileMap.tileToPixel(entity.tileLocation, center=True))
+                        topLeftPointer = self.activePopup.anchor
+                        for button in self.activePopup.buttons:
+                            self.activeButtons.add(button)
+                            button.rect.topleft = topLeftPointer
+                            topLeftPointer = (topLeftPointer[0], topLeftPointer[1]+button.rect.height)
+
 
                     case (self.ClickType.INVALID, _):
                         print("invalid click")
@@ -101,30 +120,6 @@ class Exploration(State):
                     case (self.ClickType.BUTTON, button):
                         print(f"clicked button {button}")
                         button.callback()
-                # #TODO clean up all of this messy logic. maybe abstract out into action classes
-                # self.lastClickType = self.currClickType
-                # self.currClickType = self.getClickType(event.pos) 
-                # if self.currClickType[0] == self.ClickType.BUTTON:
-                #     self.currClickType[1].callback()
-                #     continue
-                # if self.clickedEntity != None:
-                #    pass 
-                # #Reset data
-                # self.clickedEntity = None
-                # self.path.clear()
-                # #Handle the new click
-                # if self.currClickType == self.lastClickType:
-                #     if self.currClickType[0] == self.ClickType.INVALID: continue
-                #     if self.currClickType[0] == self.ClickType.MAP_TILE: print("check if move is legal and move")
-                # if self.currClickType[0] == self.ClickType.INVALID: continue#don't handle this event
-                # if self.currClickType[0] == self.ClickType.ENTITY:
-                #     if hasattr(self.currClickType[1], "attackable"): print("we clicked an attackable")
-                #     self.renderPopup = True
-                #     self.clickedEntity = self.currClickType[1]
-                #     # for action in actions if entity matches action then add action to available list
-                #     continue 
-                # if self.currClickType[0] == self.ClickType.MAP_TILE:
-                #     self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.currClickType[1])
 
     def update(self):
         #THIS IS THE PATH WALKING ALGORITHM
@@ -180,15 +175,12 @@ class Exploration(State):
         self.drawPath()
         self.UIelements.draw(self.game.screen)
 
-        #Draw interaction popups
-        if self.clickedEntity != None:
-            actionList: list[Action] = []
-            if hasattr(self.clickedEntity, "attackable"): actionList.append(attackAction)
-            if hasattr(self.clickedEntity, "interactable"): actionList.append(interactAction)
-            drawPointer = self.levelState.tileMap.tileToPixel(self.clickedEntity.tileLocation, center=True)
-            for action in actionList:
-                self.game.screen.blit(action.availableButton.image, drawPointer)
-                drawPointer = (drawPointer[0], drawPointer[1]+action.availableButton.image.get_height())
+        if self.activePopup != None:
+            drawanchor = self.activePopup.anchor
+            for button in self.activePopup.buttons:
+                self.game.screen.blit(button.image, drawanchor)
+                drawanchor = (drawanchor[0], drawanchor[1]+button.rect.height)
+
 
     class GrenadeTargeting(State):
         def rayLength(self, ray: tuple[tuple[int,int], tuple[int, int]]):
