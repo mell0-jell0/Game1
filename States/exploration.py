@@ -1,5 +1,5 @@
 import enum
-from States.States import State
+from States.States import *
 from gameMap import *
 from Entities import *
 from action import *
@@ -11,9 +11,41 @@ class Exploration(State):
         BUTTON = enum.auto()
         INVALID = enum.auto()
     
-    class Action:
-        def __init__(self) -> None:
-            pass
+    class PathWalk(MultiFrameAction):
+        '''
+        MultiFrameAction subclass for walking paths on the map
+        maintains information about the path and handling movement of character sprite and updating of character tile location
+        '''
+        def __init__(self, levelState: LevelState, path: deque[tuple[int,int]], entity: MapEntity) -> None:
+            super().__init__()
+            self.levelState = levelState
+            self.path = path
+            self.entity = entity
+            self.TIME_PER_TILE = 250 # time in ms
+            self.stepProgress = 0
+        
+        def update(self, deltaTime):
+            if len(self.path) == 1:
+                self.completed = True
+                self.path.clear()
+                return
+            self.stepProgress += deltaTime
+            if self.stepProgress > self.TIME_PER_TILE:
+                self.entity.tileLocation = self.path[1] #move to next tile in path
+                self.path.popleft()
+                self.stepProgress = 0
+                self.entity.rect.topleft = self.levelState.tileMap.tileToPixel(self.entity.tileLocation)
+                pass
+            else:
+                # linterp sprite location
+                startPoint = self.levelState.tileMap.tileToPixel(self.entity.tileLocation, center=True)
+                endPoint= self.levelState.tileMap.tileToPixel(self.path[1], center=True)
+                xLoc = pg.math.lerp(startPoint[0], endPoint[0], self.stepProgress/self.TIME_PER_TILE)
+                yLoc = pg.math.lerp(startPoint[1], endPoint[1], self.stepProgress/self.TIME_PER_TILE)
+                self.entity.rect.center = (xLoc, yLoc)
+                pass
+            # do the path walking algorithm
+            # at every step get the time. add the time to the progress bar, linterp the characters position between the two tiles. If the progress is >= 100 then place them on the tile and move on to the next step in the path 
     '''
     free roam tile map exploration. you walk where you click and you can interact with characters and items in this mode. triggers Turn control when within range of enemy. will also be able to trigger fishing later
     '''
@@ -21,6 +53,11 @@ class Exploration(State):
         self.game = game
 
         self.levelState = levelState
+        
+        #Make sure entities draw locations are their tile locations
+        for actor in self.levelState.entities:
+            actor.rect.topleft = self.levelState.tileMap.tileToPixel(actor.tileLocation)
+
         self.player = player
         
         #MENU UI
@@ -50,7 +87,8 @@ class Exploration(State):
 
         #movement handling variables
         self.path : deque = deque()
-        self.moveTarget: None | tuple[int, int] = None
+        #self.moveTarget: None | tuple[int, int] = None
+        self.multiFrameActions:set[MultiFrameAction] = set() #maintains list of all of the things that need to be updated each frame
 
         #UI interaction variables
         self.currClickType: tuple = tuple()
@@ -85,6 +123,7 @@ class Exploration(State):
     def process(self, events: list[pg.event.Event]):
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT: #Click was made
+                self.lastClickType = self.currClickType
                 self.currClickType = self.getClickType(event.pos)
                 #Reset tracking variables
                 self.path.clear()
@@ -96,6 +135,10 @@ class Exploration(State):
                         assert(isinstance(tile, tuple))
                         print(f"clicked map tile {tile}")
                         self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
+                        if self.currClickType == self.lastClickType: 
+                            print(f"we confirmed a movement click to tile {tile}")
+                            self.multiFrameActions.add(self.PathWalk(self.levelState, self.path, self.player))
+                            #figure out how to make sure that two path walks aren't added at the same time. Make first path walk block
 
                     case (self.ClickType.ENTITY, entity):
                         assert(isinstance(entity, MapEntity))
@@ -122,28 +165,38 @@ class Exploration(State):
                         button.callback()
 
     def update(self):
-        #THIS IS THE PATH WALKING ALGORITHM
-        if self.moveTarget == None and len(self.path) == 0: #no path to walk
-            pass
-        elif self.moveTarget != None and len(self.path) ==0: #new target, get the new path
-            self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.moveTarget)
-        elif self.moveTarget != None and len(self.path) != 0: #active target and path
-            if self.moveTarget == self.path[-1]: #path is active for current target
-                #animate normally until end of path
-                self.animProgress += self.game.clock.get_time()
-                if self.animProgress >= self.timePerTile:
-                    self.animProgress = 0
-                    self.player.tileLocation = self.path[0]
-                    self.path.popleft()
-            else: #target has changed from the old path
-                if self.animProgress == 0: #if at break in path, update
-                    self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.moveTarget)
-                else: #if not at break in path, keep animating
-                    self.animProgress += self.game.clock.get_time()
-                    if self.animProgress >= self.timePerTile:
-                        self.animProgress = 0
-                        self.player.tileLocation = self.path[0]
-                        self.path.popleft()
+        finishedActions: list[MultiFrameAction] = []
+        for action in self.multiFrameActions:
+            if action.completed:
+                finishedActions.append(action)
+            else:
+                action.update(self.game.clock.get_time())
+
+        for action in finishedActions:
+            self.multiFrameActions.remove(action)
+        # #calll update on every multiframe process
+        # #THIS IS THE PATH WALKING ALGORITHM
+        # if self.moveTarget == None and len(self.path) == 0: #no path to walk
+        #     pass
+        # elif self.moveTarget != None and len(self.path) ==0: #new target, get the new path
+        #     self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.moveTarget)
+        # elif self.moveTarget != None and len(self.path) != 0: #active target and path
+        #     if self.moveTarget == self.path[-1]: #path is active for current target
+        #         #animate normally until end of path
+        #         self.animProgress += self.game.clock.get_time()
+        #         if self.animProgress >= self.timePerTile:
+        #             self.animProgress = 0
+        #             self.player.tileLocation = self.path[0]
+        #             self.path.popleft()
+        #     else: #target has changed from the old path
+        #         if self.animProgress == 0: #if at break in path, update
+        #             self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.moveTarget)
+        #         else: #if not at break in path, keep animating
+        #             self.animProgress += self.game.clock.get_time()
+        #             if self.animProgress >= self.timePerTile:
+        #                 self.animProgress = 0
+        #                 self.player.tileLocation = self.path[0]
+        #                 self.path.popleft()
         
 
     def drawPath(self):
@@ -164,9 +217,6 @@ class Exploration(State):
                 #pg.draw.circle(self.game.screen, "pink", self.levelState.tileMap.tileToPixel(tile, center=True), self.levelState.tileMap.TILE_WIDTH//3)
 
     def render(self):
-        for actor in self.levelState.entities:
-            actor.rect.topleft = self.levelState.tileMap.tileToPixel(actor.tileLocation)
-
         self.levelState.tileMap.draw(self.game.screen)
         self.levelState.tileMap.drawCoverDebug(self.game.screen)
         for actor in self.levelState.entities:

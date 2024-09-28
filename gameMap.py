@@ -167,6 +167,8 @@ class GameMap:
     def getPath(self, source: tuple[int, int], target: tuple[int, int]) -> deque:
         '''
         Like calcDistance, uses bfs to find a shortest path between source and target. not accounting for cover/obstructions
+        Returns tiles in order from source to target
+        Includes source in path
         '''
         toVisit = deque([source]) #basic bfs queue
         visited = set() #keep track of what we already visited
@@ -192,8 +194,6 @@ class GameMap:
                     currTile = parents[currTile]
                 path.reverse()
                 path = deque(path)
-                #remove source from path
-                path.popleft()
                 return path
     
     def setOffset(self, newVal):

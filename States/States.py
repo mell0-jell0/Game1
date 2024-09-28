@@ -22,6 +22,14 @@ class State:
     def render(self):
         pass
 
+
+class MultiFrameAction:
+    def __init__(self) -> None:
+        self.completed = False
+    
+    def update(self, deltaTime: int):
+        print("update method for multiframeAction not implemented")
+
 class StartMenu(State):
     def __init__(self, game) -> None:
         self.game = game
