@@ -49,7 +49,7 @@ class Exploration(State):
     '''
     free roam tile map exploration. you walk where you click and you can interact with characters and items in this mode. triggers Turn control when within range of enemy. will also be able to trigger fishing later
     '''
-    def __init__(self, game, levelState: LevelState, player:MapEntity) -> None:
+    def __init__(self, game, levelState: LevelState, player: Player) -> None:
         self.game = game
 
         self.levelState = levelState
@@ -58,7 +58,7 @@ class Exploration(State):
         for actor in self.levelState.entities:
             actor.rect.topleft = self.levelState.tileMap.tileToPixel(actor.tileLocation)
 
-        self.player = player
+        self.player: Player = player
         
         #MENU UI
         self.UIelements = pg.sprite.Group()
@@ -145,6 +145,10 @@ class Exploration(State):
                         print(f"clicked entity {entity}")
                         popupButtons: list = []
                         if hasattr(entity, "attackable"):
+                            if self.player.equipped != None: # Update the callback of the attack button based on the weapon
+                                attackAction.availableButton.callback = lambda : self.player.equipped.resolveAttack(entity, self.levelState)
+                            else:
+                                attackAction.availableButton.callback = lambda : print("Player cannont attack: equipped weapon = None")
                             popupButtons.append(attackAction.availableButton)
                         if hasattr(entity, "interactable"):
                             popupButtons.append(interactAction.availableButton)

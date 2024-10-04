@@ -59,7 +59,7 @@ fc = lambda : print("lambda option 1")
 fd = lambda : print("lambda option 2")
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-weapon1 = Weapon("bolty1.png", "weapon", lambda: print("resolve attack placeholder"))
+weapon1 = Weapon("bolty1.png", "weapon")
 item1 = Item("bolty1.png", "placeholder type")
 item2 = Item("medKit1.png", "placeholder type")
 
@@ -68,7 +68,6 @@ player = Player(*load_image("16GuySmaller.png"))
 player.setTileLocation((1,7))
 enemy1 = BasicEnemy(*load_image("basicEnemy.png"))
 enemy1.setTileLocation((9,9))
-weapon1.resolveAttack()
 cameraOffset = (-400,-80)
 bigMap.setOffset(cameraOffset)
 

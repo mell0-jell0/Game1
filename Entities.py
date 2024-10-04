@@ -1,6 +1,7 @@
+# TODO: Fix or make more elegant the "almost circular" imports between items and entities
+# perhaps split each separate component into a different file. this might be cumbersome. think about it.
 from typing import Any
 from utility import *
-from Item import *
 from gameMap import *
 
 '''
@@ -41,6 +42,8 @@ class Attackable:
         self.maxHp = maxHp
         self.hp = maxHp
 
+from Item import *
+
 class TurnTaker:
     '''
     Class for entities that respond/take an action when the turn state is stepped over.
@@ -63,6 +66,7 @@ class Player(MapEntity):
         pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
         self.inventory: Inventory = Inventory()
+        self.equipped: Weapon | None = None
         self.attackable: Attackable = Attackable(maxHp=10)
 
 class BasicEnemy(MapEntity):
