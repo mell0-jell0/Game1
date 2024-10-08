@@ -23,7 +23,7 @@ My friend A. for convincing me to get started and keeping me accountable by aski
 
 
 class Game:
-    def __init__(self, screen) -> None:
+    def __init__(self, screen:pg.surface.Surface) -> None:
         self.stateStack: list[State] = []
         self.WIN_WIDTH = 1280
         self.WIN_HEIGHT = 720
@@ -46,6 +46,7 @@ class Game:
 
             self.clock.tick(60)
             pg.display.flip()
+            self.screen.fill("black")
 
         pg.quit()
 

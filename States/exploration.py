@@ -99,6 +99,12 @@ class Exploration(State):
         self.animProgress = 0 
         self.timePerTile = 250 #in ms
 
+        #Temporary animations / effects
+        self.tempAnimations: set[EffectAnimation] = set()
+        self.tempAnimations.add(EffectAnimation(load_images("testAnimation")))
+
+        #Constant/persistent animations tied to entities
+
     def getClickType(self, clickPos: tuple[int, int]) -> tuple:
         '''
         function for classifying what was clicked on by the user for purposes of UI interaction
@@ -178,6 +184,16 @@ class Exploration(State):
 
         for action in finishedActions:
             self.multiFrameActions.remove(action)
+        
+        finishedAnimations = []
+        for anim in self.tempAnimations:
+            anim.update(self.game.clock.get_time())
+            if anim.complete:
+                finishedAnimations.append(anim)
+        
+        for anim in finishedAnimations:
+            self.tempAnimations.remove(anim)
+            
         # #calll update on every multiframe process
         # #THIS IS THE PATH WALKING ALGORITHM
         # if self.moveTarget == None and len(self.path) == 0: #no path to walk
@@ -234,6 +250,9 @@ class Exploration(State):
             for button in self.activePopup.buttons:
                 self.game.screen.blit(button.image, drawanchor)
                 drawanchor = (drawanchor[0], drawanchor[1]+button.rect.height)
+        
+        for anim in self.tempAnimations:
+            anim.draw(self.game.screen)
 
 
     class GrenadeTargeting(State):
