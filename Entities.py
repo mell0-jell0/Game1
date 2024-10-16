@@ -14,6 +14,9 @@ class MapEntity(pg.sprite.Sprite):
     '''
     Basic extenstion of sprite to include map tile location.
     Is basis for all things that exist on the map.
+    COMPONENT SYSTEM: 
+        attributes which are components should be named as the lower camel-case of the class name of the component
+        i.e. a MapEntity will have an attribute attackable of type Attackable.
     '''
     def __init__(self, image, rect):
         self.image = image

@@ -21,7 +21,7 @@ My friend A. for convincing me to get started and keeping me accountable by aski
 '''
             
 
-
+# TODO: rework the game object so that autocomplete works and shared pygame state is easily and elegantly accessible
 class Game:
     def __init__(self, screen:pg.surface.Surface) -> None:
         self.stateStack: list[State] = []
@@ -60,13 +60,14 @@ fc = lambda : print("lambda option 1")
 fd = lambda : print("lambda option 2")
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-weapon1 = Weapon("bolty1.png", "weapon")
+weapon1 = Shotgun("bolty1.png", "weapon", EffectAnimation(load_images("bulletAnim"), 100//15))
 item1 = Item("bolty1.png", "placeholder type")
 item2 = Item("medKit1.png", "placeholder type")
 
 #player = Character("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
 player = Player(*load_image("16GuySmaller.png"))
 player.setTileLocation((1,7))
+player.equipped = weapon1
 enemy1 = BasicEnemy(*load_image("basicEnemy.png"))
 enemy1.setTileLocation((9,9))
 cameraOffset = (-400,-80)

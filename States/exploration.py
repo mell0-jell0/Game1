@@ -152,7 +152,7 @@ class Exploration(State):
                         popupButtons: list = []
                         if hasattr(entity, "attackable"):
                             if self.player.equipped != None: # Update the callback of the attack button based on the weapon
-                                attackAction.availableButton.callback = lambda : self.player.equipped.resolveAttack(entity, self.levelState)
+                                attackAction.availableButton.callback = lambda : self.player.equipped.resolveAttack(self.player, entity, self.levelState, self.tempAnimations)
                             else:
                                 attackAction.availableButton.callback = lambda : print("Player cannont attack: equipped weapon = None")
                             popupButtons.append(attackAction.availableButton)

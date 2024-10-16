@@ -1,4 +1,5 @@
 import os
+import math
 import enum
 
 import pygame as pg
@@ -72,7 +73,7 @@ class Popup:
         self.anchor = anchor
 
 class EffectAnimation(pg.sprite.Sprite):
-    def __init__(self, imageFrames: list[pg.surface.Surface]) -> None:
+    def __init__(self, imageFrames: list[pg.surface.Surface], TIME_PER_FRAME=33) -> None:
         super().__init__()
         self.complete = False
         self.imageFrames: list[pg.surface.Surface] = imageFrames
@@ -80,7 +81,9 @@ class EffectAnimation(pg.sprite.Sprite):
         self.image: pg.surface.Surface = imageFrames[0]
         self.rect: pg.rect.Rect = pg.rect.Rect(0,0,0,0)
         self.frameProgress = 0
-        self.TIME_PER_FRAME = 33
+        self.TIME_PER_FRAME = TIME_PER_FRAME #this value in ms. By default is 33, so ~30FPS
+        self.terminationCounter = 0
+        self.terminationTime = 100
     
     def update(self, deltaTime):
         self.frameProgress += deltaTime
@@ -88,6 +91,29 @@ class EffectAnimation(pg.sprite.Sprite):
             self.currImageIndex = (self.currImageIndex + 1) % len(self.imageFrames)
             self.frameProgress = 0
             self.image = self.imageFrames[self.currImageIndex]
+        
+        self.terminationCounter += deltaTime
+        if self.terminationCounter >= self.terminationTime: self.complete = True
 
     def draw(self, surf: pg.surface.Surface):
         surf.blit(self.image, self.rect)
+    
+    def rotated(self, degrees):
+        '''
+        Returns a deep copy of this animation with all of the frames rotated by provided number of degrees
+        '''
+        newImages = [pg.transform.rotate(img, degrees) for img in self.imageFrames]
+        return EffectAnimation(newImages, self.TIME_PER_FRAME)
+
+def rotateAndPlace(img, degrees: float, distance=0):
+    ogWidth = img.get_rect().width
+    ogHeight = img.get_rect().height
+    rotatedImg = pg.transform.rotate(img, degrees)
+    newCenter = rotatedImg.get_rect().center
+    # use trig to get the vector difference between the topleft of the image and the "origin" of the image we want to draw
+    drawOffset = (newCenter[0]+ogWidth/2*math.cos(math.radians(-90+degrees)),
+                       newCenter[1]-ogHeight/2*math.sin(math.radians(-90+degrees)))
+
+    drawOffset: tuple[int, int] =( int(drawOffset[0]+distance*math.cos(math.radians(-90+degrees))), 
+                      int(drawOffset[1]-distance*math.sin(math.radians(-90+degrees))) )
+    return rotatedImg, drawOffset
