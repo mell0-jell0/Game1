@@ -194,6 +194,7 @@ class GameMap:
                     currTile = parents[currTile]
                 path.reverse()
                 path = deque(path)
+                # path.popleft()
                 return path
     
     def setOffset(self, newVal):

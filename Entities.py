@@ -3,6 +3,7 @@
 from typing import Any
 from utility import *
 from gameMap import *
+from action import *
 
 '''
 Contains components used for entities and game logic
@@ -52,8 +53,10 @@ class TurnTaker:
     Class for entities that respond/take an action when the turn state is stepped over.
     Can be used for characters/NPCs or things such as traps, moving objects etc.
     '''
-    def __init__(self, takeTurn) -> None:
+    def __init__(self, takeTurn, isPlayer: bool) -> None:
         self.takeTurn = takeTurn
+        self.isPlayer = isPlayer
+        self.currentAction:TurnAction | None = None
 
 class Inventory:
     '''
@@ -71,6 +74,7 @@ class Player(MapEntity):
         self.inventory: Inventory = Inventory()
         self.equipped: Weapon | None = None
         self.attackable: Attackable = Attackable(maxHp=10)
+        self.turnTaker = TurnTaker(lambda: print("take turn not implemented for Player"), True)
 
 class BasicEnemy(MapEntity):
     def __init__(self, image, rect):
@@ -78,3 +82,4 @@ class BasicEnemy(MapEntity):
         super().__init__(image, rect)
         self.attackable: Attackable = Attackable(maxHp=10)
         self.interactable: Interactable = Interactable()
+        self.turnTaker = TurnTaker(lambda:print("Turn taking not implemented for BasicEnemy"), False)

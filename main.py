@@ -60,7 +60,7 @@ fc = lambda : print("lambda option 1")
 fd = lambda : print("lambda option 2")
 
 bigMap = GameMap("manifest.csv", "testmap.csv")
-weapon1 = Shotgun("bolty1.png", "weapon", EffectAnimation(load_images("bulletAnim"), 100//15))
+weapon1 = Shotgun("bolty1.png", "weapon", EffectAnimation(load_images("bulletAnim"), 100//15), 1)
 item1 = Item("bolty1.png", "placeholder type")
 item2 = Item("medKit1.png", "placeholder type")
 

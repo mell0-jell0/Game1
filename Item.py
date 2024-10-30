@@ -19,17 +19,18 @@ class Item(pg.sprite.Sprite):
 from Entities import MapEntity, LevelState, Attackable
 class Weapon(Item):
     '''asbtract class for weapon types so that they can be equipped'''
-    def __init__(self, imgName, type, attackAnim, description="generic weapon") -> None:
+    def __init__(self, imgName, type, attackAnim, attackCost: int, description="generic weapon") -> None:
         super().__init__(imgName, type, description)
         self.attackAnim: EffectAnimation = attackAnim
+        self.attackCost = attackCost
     
     def resolveAttack(self, attacker: MapEntity, target: MapEntity, levelState: LevelState, animationSet: set[EffectAnimation]):
         assert(hasattr(target, "attackable"))
         print("resolveAttack not implemented for this weapon")
 
 class Shotgun(Weapon):
-    def __init__(self, imgName, type, attackAnim, description="generic weapon") -> None:
-        super().__init__(imgName, type, attackAnim, description)
+    def __init__(self, imgName, type, attackAnim, attackCost, description="generic weapon") -> None:
+        super().__init__(imgName, type, attackAnim, attackCost, description)
     
     def resolveAttack(self, attacker: MapEntity, target: MapEntity, levelState: LevelState, animationSet: set[EffectAnimation]):
         assert(hasattr(target, "attackable"))

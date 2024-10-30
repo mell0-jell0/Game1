@@ -1,5 +1,12 @@
 from utility import *
-class Action:
+
+class TurnAction:
+    def __init__(self, resolutionEffect, turnCost: int, interruptable) -> None:
+        self.resolutionEffect = resolutionEffect
+        self.turnCost = turnCost
+        self.interruptable = interruptable
+
+class EntityAction:
     '''
     Class for maintaining information about different kinds of actions for the purposes of user interaction
     Has image icons to indicate whether or not the action is available and a description of the action as well
@@ -28,11 +35,11 @@ class Action:
         self.availableButton = Button(availableSurf, lambda : print("available button doesn't have callback"))
         self.unavailableButton = Button(unavailableSurf, lambda : print("unavailable button doesn't have callback"))
 
-attackAction = Action(load_image("attackAvailableIcon.png", scale=1), 
+attackAction = EntityAction(load_image("attackAvailableIcon.png", scale=1), 
                       load_image("attackUnavailableIcon.png", scale=1),
                       "Attack",
                       "Attack target")
-interactAction = Action(load_image("interactAvailableIcon.png", scale=1),
+interactAction = EntityAction(load_image("interactAvailableIcon.png", scale=1),
                         load_image("interactUnavailableIcon.png", scale=1),
                         "Interact",
                         "Interact with this object")
