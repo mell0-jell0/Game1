@@ -83,7 +83,7 @@ class EffectAnimation(pg.sprite.Sprite):
         self.frameProgress = 0
         self.TIME_PER_FRAME = TIME_PER_FRAME #this value in ms. By default is 33, so ~30FPS
         self.terminationCounter = 0
-        self.terminationTime = 100
+        self.terminationTime = 250
     
     def update(self, deltaTime):
         self.frameProgress += deltaTime
