@@ -11,6 +11,7 @@ class Exploration(State):
         BUTTON = enum.auto()
         INVALID = enum.auto()
     
+    
     class PathWalk(MultiFrameAction):
         '''
         MultiFrameAction subclass for walking paths on the map
@@ -21,7 +22,7 @@ class Exploration(State):
             self.levelState = levelState
             self.path = path
             self.entity = entity
-            self.TIME_PER_TILE = 250 # time in ms
+            self.TIME_PER_TILE = 200 # time in ms
             self.stepProgress = 0
         
         def update(self, deltaTime):
@@ -32,7 +33,7 @@ class Exploration(State):
             self.stepProgress += deltaTime
             if self.stepProgress > self.TIME_PER_TILE:
                 self.entity.tileLocation = self.path[1] #move to next tile in path
-                self.path.popleft()
+                self.path.popleft() # If path includes source, remove it
                 self.stepProgress = 0
                 self.entity.rect.topleft = self.levelState.tileMap.tileToPixel(self.entity.tileLocation)
                 pass
@@ -59,11 +60,19 @@ class Exploration(State):
             actor.rect.topleft = self.levelState.tileMap.tileToPixel(actor.tileLocation)
 
         self.player: Player = player
-        
+
+        #Turn Management
+        self.turnTakers: list[MapEntity] = [entity for entity in levelState.entities if hasattr(entity, "turnTaker")] 
+        self.currentTurnTaker: MapEntity = self.turnTakers[0]
+
         #MENU UI
         self.UIelements = pg.sprite.Group()
         self.activeButtons: set[Button] = set()
         self.activePopup: Popup | None = None
+
+        #Turn UI
+        turnIndicator = TextImg("Current Turn: ", "White", "black")
+        self.UIelements.add(turnIndicator)
 
         #bounding box for UI elements on right side of screen
         self.UIbox = pg.rect.Rect(0,0,0,0)
@@ -87,6 +96,7 @@ class Exploration(State):
 
         #movement handling variables
         self.path : deque = deque()
+        self.pathChain: deque[deque[tile]] = deque()
         #self.moveTarget: None | tuple[int, int] = None
         self.multiFrameActions:set[MultiFrameAction] = set() #maintains list of all of the things that need to be updated each frame
 
@@ -126,53 +136,65 @@ class Exploration(State):
         #No clicked entity then map clicked
         return (self.ClickType.MAP_TILE, clickTileLocation)
 
+    def handleLeftClick(self, event):
+        '''
+        Extracted logic for handling left clicks to reduce nesting/reading complexity
+        '''
+        self.lastClickType = self.currClickType
+        self.currClickType = self.getClickType(event.pos)
+        #Reset tracking variables
+        self.path.clear()
+        self.pathChain.clear()
+        self.activePopup = None
+        self.activeButtons.clear()
+
+        match self.currClickType:
+            case (self.ClickType.MAP_TILE, tile):
+                assert(isinstance(tile, tuple))
+                print(f"clicked map tile {tile}")
+                totalPath = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
+                # break the path into multiple of 3
+                self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
+                self.pathChain.append(self.path)
+                if self.currClickType == self.lastClickType: 
+                    print(f"we confirmed a movement click to tile {tile}")
+                    self.multiFrameActions.add(self.PathWalk(self.levelState, self.path, self.player))
+                    #figure out how to make sure that two path walks aren't added at the same time. Make first path walk block
+
+            case (self.ClickType.ENTITY, entity):
+                assert(isinstance(entity, MapEntity))
+                print(f"clicked entity {entity}")
+                popupButtons: list = []
+                if hasattr(entity, "attackable"):
+                    if self.player.equipped != None: # Update the callback of the attack button based on the weapon
+                        attackAction.availableButton.callback = lambda : self.player.equipped.resolveAttack(self.player, entity, self.levelState, self.tempAnimations)
+                    else:
+                        attackAction.availableButton.callback = lambda : print("Player cannont attack: equipped weapon = None")
+                    popupButtons.append(attackAction.availableButton)
+                if hasattr(entity, "interactable"):
+                    popupButtons.append(interactAction.availableButton)
+                
+                self.activePopup = Popup(popupButtons, self.levelState.tileMap.tileToPixel(entity.tileLocation, center=True))
+                topLeftPointer = self.activePopup.anchor
+                for button in self.activePopup.buttons:
+                    self.activeButtons.add(button)
+                    button.rect.topleft = topLeftPointer
+                    topLeftPointer = (topLeftPointer[0], topLeftPointer[1]+button.rect.height)
+
+
+            case (self.ClickType.INVALID, _):
+                print("invalid click")
+
+            case (self.ClickType.BUTTON, button):
+                print(f"clicked button {button}")
+                button.callback()
+
     def process(self, events: list[pg.event.Event]):
         for event in events:
+            #If it is the players turn, then process their types of inputs
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT: #Click was made
-                self.lastClickType = self.currClickType
-                self.currClickType = self.getClickType(event.pos)
-                #Reset tracking variables
-                self.path.clear()
-                self.activePopup = None
-                self.activeButtons.clear()
-
-                match self.currClickType:
-                    case (self.ClickType.MAP_TILE, tile):
-                        assert(isinstance(tile, tuple))
-                        print(f"clicked map tile {tile}")
-                        self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
-                        if self.currClickType == self.lastClickType: 
-                            print(f"we confirmed a movement click to tile {tile}")
-                            self.multiFrameActions.add(self.PathWalk(self.levelState, self.path, self.player))
-                            #figure out how to make sure that two path walks aren't added at the same time. Make first path walk block
-
-                    case (self.ClickType.ENTITY, entity):
-                        assert(isinstance(entity, MapEntity))
-                        print(f"clicked entity {entity}")
-                        popupButtons: list = []
-                        if hasattr(entity, "attackable"):
-                            if self.player.equipped != None: # Update the callback of the attack button based on the weapon
-                                attackAction.availableButton.callback = lambda : self.player.equipped.resolveAttack(self.player, entity, self.levelState, self.tempAnimations)
-                            else:
-                                attackAction.availableButton.callback = lambda : print("Player cannont attack: equipped weapon = None")
-                            popupButtons.append(attackAction.availableButton)
-                        if hasattr(entity, "interactable"):
-                            popupButtons.append(interactAction.availableButton)
-                        
-                        self.activePopup = Popup(popupButtons, self.levelState.tileMap.tileToPixel(entity.tileLocation, center=True))
-                        topLeftPointer = self.activePopup.anchor
-                        for button in self.activePopup.buttons:
-                            self.activeButtons.add(button)
-                            button.rect.topleft = topLeftPointer
-                            topLeftPointer = (topLeftPointer[0], topLeftPointer[1]+button.rect.height)
-
-
-                    case (self.ClickType.INVALID, _):
-                        print("invalid click")
-
-                    case (self.ClickType.BUTTON, button):
-                        print(f"clicked button {button}")
-                        button.callback()
+                self.handleLeftClick(event)
+            if event.type == pg.KEYDOWN and event.key == pg.K_d: print(f"Pathchain is : {self.pathChain}")
 
     def update(self):
         finishedActions: list[MultiFrameAction] = []
@@ -184,6 +206,8 @@ class Exploration(State):
 
         for action in finishedActions:
             self.multiFrameActions.remove(action)
+            if isinstance(action, self.PathWalk): #if a pathwalk was just completed, remove the path from the pathchain
+                self.pathChain.popleft
         
         finishedAnimations = []
         for anim in self.tempAnimations:
@@ -193,48 +217,52 @@ class Exploration(State):
         
         for anim in finishedAnimations:
             self.tempAnimations.remove(anim)
-            
-        # #calll update on every multiframe process
-        # #THIS IS THE PATH WALKING ALGORITHM
-        # if self.moveTarget == None and len(self.path) == 0: #no path to walk
-        #     pass
-        # elif self.moveTarget != None and len(self.path) ==0: #new target, get the new path
-        #     self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.moveTarget)
-        # elif self.moveTarget != None and len(self.path) != 0: #active target and path
-        #     if self.moveTarget == self.path[-1]: #path is active for current target
-        #         #animate normally until end of path
-        #         self.animProgress += self.game.clock.get_time()
-        #         if self.animProgress >= self.timePerTile:
-        #             self.animProgress = 0
-        #             self.player.tileLocation = self.path[0]
-        #             self.path.popleft()
-        #     else: #target has changed from the old path
-        #         if self.animProgress == 0: #if at break in path, update
-        #             self.path = self.levelState.tileMap.getPath(self.player.tileLocation, self.moveTarget)
-        #         else: #if not at break in path, keep animating
-        #             self.animProgress += self.game.clock.get_time()
-        #             if self.animProgress >= self.timePerTile:
-        #                 self.animProgress = 0
-        #                 self.player.tileLocation = self.path[0]
-        #                 self.path.popleft()
+        
+        if self.currentTurnTaker == self.player:
+            pass #update the players action if they have one. if they don't have one, do nothing
+        else:
+            pass #update the ai's action if they have one. if they don't have one, query them for an update.
         
 
-    def drawPath(self):
+    def drawPathChain(self):
         PATH_THICKNESS = 2
         PATH_COLOR = "white"
         #Draw path to walk 
-        for idx, tile in enumerate(self.path):
-            if tile == self.path[-1]:
-                pg.draw.circle(self.game.screen,
-                               "green",
-                               self.levelState.tileMap.tileToPixel(tile, center=True),
-                               self.levelState.tileMap.TILE_WIDTH//4,
-                               width=3)
+        for path in self.pathChain:
+            # draw all the segments of the path
+            # for each terminal of a path, draw the special symbol there
+            # for the terminal terminal, draw the special symbol
+            if path == self.pathChain[-1]:
+                isTerminalPath = True
             else:
-                startPixel = self.levelState.tileMap.tileToPixel(tile, center=True)
-                endPixel = self.levelState.tileMap.tileToPixel(self.path[idx+1], center=True)
-                pg.draw.line(self.game.screen, PATH_COLOR, startPixel, endPixel, width=PATH_THICKNESS)
-                #pg.draw.circle(self.game.screen, "pink", self.levelState.tileMap.tileToPixel(tile, center=True), self.levelState.tileMap.TILE_WIDTH//3)
+                isTerminalPath = False
+
+            for idx, tile in enumerate(self.path):
+                if tile == self.path[-1]:
+                    if isTerminalPath: #do special drawing
+                        # get the points based of the direction came from
+                        #TODO: add logic to draw triangle in correct orientation of path movement
+                        center = self.levelState.tileMap.tileToPixel(tile, center=True)
+                        offset = self.levelState.tileMap.TILE_WIDTH //4
+                        trianlgePts: tuple = (
+                            (center[0], center[1]+offset),
+                            (center[0]+offset, center[1]),
+                            (center[0]-offset, center[1])
+                        )
+                        pg.draw.polygon(self.game.screen,
+                                        "green",
+                                        trianlgePts)
+                    else:
+                        pg.draw.circle(self.game.screen,
+                                "green",
+                                self.levelState.tileMap.tileToPixel(tile, center=True),
+                                self.levelState.tileMap.TILE_WIDTH//4,
+                                width=3)
+                else:
+                    startPixel = self.levelState.tileMap.tileToPixel(tile, center=True)
+                    endPixel = self.levelState.tileMap.tileToPixel(self.path[idx+1], center=True)
+                    pg.draw.line(self.game.screen, PATH_COLOR, startPixel, endPixel, width=PATH_THICKNESS)
+                    #pg.draw.circle(self.game.screen, "pink", self.levelState.tileMap.tileToPixel(tile, center=True), self.levelState.tileMap.TILE_WIDTH//3)
 
     def render(self):
         self.levelState.tileMap.draw(self.game.screen)
@@ -242,7 +270,7 @@ class Exploration(State):
         for actor in self.levelState.entities:
             self.game.screen.blit(actor.image, actor.rect)
         
-        self.drawPath()
+        self.drawPathChain()
         self.UIelements.draw(self.game.screen)
 
         if self.activePopup != None:
