@@ -164,7 +164,7 @@ class GameMap:
             visited.add(currTile)
             if currTile == target: return distance[currTile]
 
-    def getPath(self, source: tuple[int, int], target: tuple[int, int]) -> deque:
+    def getPath(self, source: tuple[int, int], target: tuple[int, int]) -> deque[tile]:
         '''
         Like calcDistance, uses bfs to find a shortest path between source and target. not accounting for cover/obstructions
         Returns tiles in order from source to target

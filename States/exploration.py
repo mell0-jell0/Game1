@@ -153,6 +153,8 @@ class Exploration(State):
                 assert(isinstance(tile, tuple))
                 print(f"clicked map tile {tile}")
                 totalPath = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
+                #if we are at the end, then be done
+                #if we aren't at the end, get as many as we can up to 3 and add them to a new path.
                 # break the path into multiple of 3
                 self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
                 self.pathChain.append(self.path)
