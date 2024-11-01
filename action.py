@@ -1,6 +1,12 @@
 from utility import *
 
 class TurnAction:
+    '''
+    Class for handling information about kinds of actions that can be taken on a turn
+    Include
+        turn cost
+        whether or not the action is interruptable
+    '''
     def __init__(self, resolutionEffect, turnCost: int, interruptable) -> None:
         self.resolutionEffect = resolutionEffect
         self.turnCost = turnCost
