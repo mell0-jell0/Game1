@@ -153,11 +153,27 @@ class Exploration(State):
                 assert(isinstance(tile, tuple))
                 print(f"clicked map tile {tile}")
                 totalPath = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
-                #if we are at the end, then be done
-                #if we aren't at the end, get as many as we can up to 3 and add them to a new path.
-                # break the path into multiple of 3
-                self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
-                self.pathChain.append(self.path)
+                assert(len(totalPath) > 1)
+
+                #Leapfrog along path and split it into chunks 4 nodes or less
+                startIndex = 0
+                endIndex = 0
+                while True:
+                    startIndex = endIndex
+                    # check how much room we have. use as many of the remaining nodes as we can up to 4
+                    nodesLeft = len(totalPath) - startIndex
+                    if nodesLeft >= 4:
+                        endIndex += 3
+                    elif nodesLeft > 1:
+                        endIndex += nodesLeft - 1
+                    else:
+                        break
+                    self.pathChain.append(deque( [totalPath[i] for i in range(startIndex, endIndex+1)] ))
+
+                    #if endIndex == len(totalPath) - 1: break # End when done
+                self.path = self.pathChain[0]
+                # self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
+                # self.pathChain.append(self.path)
                 if self.currClickType == self.lastClickType: 
                     print(f"we confirmed a movement click to tile {tile}")
                     self.multiFrameActions.add(self.PathWalk(self.levelState, self.path, self.player))
@@ -199,6 +215,7 @@ class Exploration(State):
             if event.type == pg.KEYDOWN and event.key == pg.K_d: print(f"Pathchain is : {self.pathChain}")
 
     def update(self):
+        # Process all MultiFrameActions
         finishedActions: list[MultiFrameAction] = []
         for action in self.multiFrameActions:
             if action.completed:
@@ -211,6 +228,7 @@ class Exploration(State):
             if isinstance(action, self.PathWalk): #if a pathwalk was just completed, remove the path from the pathchain
                 self.pathChain.popleft
         
+        # Process all temporary/effect animations
         finishedAnimations = []
         for anim in self.tempAnimations:
             anim.update(self.game.clock.get_time())
@@ -220,6 +238,7 @@ class Exploration(State):
         for anim in finishedAnimations:
             self.tempAnimations.remove(anim)
         
+        # Handle parts of the turn taking scheme
         if self.currentTurnTaker == self.player:
             pass #update the players action if they have one. if they don't have one, do nothing
         else:
@@ -239,8 +258,8 @@ class Exploration(State):
             else:
                 isTerminalPath = False
 
-            for idx, tile in enumerate(self.path):
-                if tile == self.path[-1]:
+            for idx, tile in enumerate(path):
+                if tile == path[-1]:
                     if isTerminalPath: #do special drawing
                         # get the points based of the direction came from
                         #TODO: add logic to draw triangle in correct orientation of path movement
@@ -262,7 +281,7 @@ class Exploration(State):
                                 width=3)
                 else:
                     startPixel = self.levelState.tileMap.tileToPixel(tile, center=True)
-                    endPixel = self.levelState.tileMap.tileToPixel(self.path[idx+1], center=True)
+                    endPixel = self.levelState.tileMap.tileToPixel(path[idx+1], center=True)
                     pg.draw.line(self.game.screen, PATH_COLOR, startPixel, endPixel, width=PATH_THICKNESS)
                     #pg.draw.circle(self.game.screen, "pink", self.levelState.tileMap.tileToPixel(tile, center=True), self.levelState.tileMap.TILE_WIDTH//3)
 
