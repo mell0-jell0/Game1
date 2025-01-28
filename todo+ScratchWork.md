@@ -18,3 +18,4 @@ TODO: turn taking
     every action has a turn cost. Simple actions take fewer turns while more complicated or involved actions take more turns. shooting, walking, 
 TODO: find a way to document actions like that path walk that may get hidden in code.
 NOTE: A problem I have now is that its a little bit unelegant and a pain in the dick to chop the path into multiple parts. it is made worse so by the fact that the scheme I have been using thus far has included source nodes. This means that the source and destination nodes of the next and previous paths overlap.
+TODO: add code to make path walking arrow always point in correct direction.
