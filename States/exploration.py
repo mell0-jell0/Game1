@@ -63,7 +63,7 @@ class Exploration(State):
 
         #Turn Management
         self.turnTakers: list[MapEntity] = [entity for entity in levelState.entities if hasattr(entity, "turnTaker")] 
-        self.currentTurnTaker: MapEntity = self.turnTakers[0]
+        self.turnTakerIndex: int = 0
 
         #MENU UI
         self.UIelements = pg.sprite.Group()
@@ -239,7 +239,7 @@ class Exploration(State):
             self.tempAnimations.remove(anim)
         
         # Handle parts of the turn taking scheme
-        if self.currentTurnTaker == self.player:
+        if self.turnTakers[self.turnTakerIndex] == self.player:
             pass #update the players action if they have one. if they don't have one, do nothing
         else:
             pass #update the ai's action if they have one. if they don't have one, query them for an update.
