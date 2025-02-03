@@ -76,6 +76,7 @@ class Player(MapEntity):
         self.attackable: Attackable = Attackable(maxHp=10)
         self.turnTaker = TurnTaker(lambda: print("take turn not implemented for Player"), True)
 
+
 class BasicEnemy(MapEntity):
     def __init__(self, image, rect):
         pg.sprite.Sprite.__init__(self)
@@ -83,3 +84,27 @@ class BasicEnemy(MapEntity):
         self.attackable: Attackable = Attackable(maxHp=10)
         self.interactable: Interactable = Interactable()
         self.turnTaker = TurnTaker(lambda:print("Turn taking not implemented for BasicEnemy"), False)
+
+    def basicTakeTurn(self, levelState: LevelState, animationSet: set[EffectAnimation]):
+        '''
+        Function called by active game state to have character make decision
+        '''
+        for entity in levelState.entities:
+            if entity == levelState.playerCharacter:
+                print("we want to attack character")
+                shotgun = testWeapon
+                shotgun.resolveAttack(self, entity, levelState, animationSet)
+            
+
+# class AIController:
+#     '''
+#     Component for handling decision making of AI. Is querie by the game state to get decisions
+#     '''
+#     def __init__(self) -> None:
+#         pass
+    
+    # def basicTakeTurn(levelState: LevelState):
+    #     for entity in levelState.entities:
+    #         if entity == levelState.playerCharacter:
+    #             print("we want to attack character")
+    #     print("Decision making not implemented yet")
