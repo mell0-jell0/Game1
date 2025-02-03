@@ -19,3 +19,5 @@ TODO: turn taking
 TODO: find a way to document actions like that path walk that may get hidden in code.
 NOTE: A problem I have now is that its a little bit unelegant and a pain in the dick to chop the path into multiple parts. it is made worse so by the fact that the scheme I have been using thus far has included source nodes. This means that the source and destination nodes of the next and previous paths overlap.
 TODO: add code to make path walking arrow always point in correct direction.
+TODO: rework the architecture. Make the turn handling information passing less complicated.
+TODO: rework how the turnEnd function is passed around.
