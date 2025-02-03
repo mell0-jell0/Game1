@@ -64,3 +64,5 @@ class Shotgun(Weapon):
         # recenter the animation rect to be where its supposed to be
         # rotate the attack animation and add it to the animation set.
         # resolvee the actual attack effects
+        
+testWeapon = Shotgun("bolty1.png", "weapon", EffectAnimation(load_images("bulletAnim"), 100//15), 1)
