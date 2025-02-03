@@ -114,8 +114,18 @@ class Exploration(State):
         self.tempAnimations.add(EffectAnimation(load_images("testAnimation")))
 
         #Constant/persistent animations tied to entities
-
-    def getClickType(self, clickPos: tuple[int, int]) -> tuple:
+        # setting gameplayPause to a value other than 0 will induce a pause in *gameplay* logic for that many ms. (i.e.Animations and technical processing should continue but AI should not take turns etc.)
+        self.gameplayPause = 0
+    
+    def nextTurn(self):
+        '''
+        Modular increment of turnTakerIndex
+        sets gameplayPause to 1000
+        '''
+        self.turnTakerIndex = (self.turnTakerIndex + 1) % len(self.turnTakers)
+        self.gameplayPause = 1000
+    
+    def getClickType(self, clickPos: tuple[int, int]) -> tuple[ClickType, Any]:
         '''
         function for classifying what was clicked on by the user for purposes of UI interaction
         returns a tuple with the click type as well as a the thing that was clicked on
@@ -153,6 +163,7 @@ class Exploration(State):
                 assert(isinstance(tile, tuple))
                 print(f"clicked map tile {tile}")
                 totalPath = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
+                if len(totalPath) < 1: return
                 assert(len(totalPath) > 1)
 
                 #Leapfrog along path and split it into chunks 4 nodes or less
@@ -170,13 +181,12 @@ class Exploration(State):
                         break
                     self.pathChain.append(deque( [totalPath[i] for i in range(startIndex, endIndex+1)] ))
 
-                    #if endIndex == len(totalPath) - 1: break # End when done
                 self.path = self.pathChain[0]
-                # self.path = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
-                # self.pathChain.append(self.path)
+
                 if self.currClickType == self.lastClickType: 
                     print(f"we confirmed a movement click to tile {tile}")
                     self.multiFrameActions.add(self.PathWalk(self.levelState, self.path, self.player))
+                    self.nextTurn()
                     #figure out how to make sure that two path walks aren't added at the same time. Make first path walk block
 
             case (self.ClickType.ENTITY, entity):
@@ -185,7 +195,12 @@ class Exploration(State):
                 popupButtons: list = []
                 if hasattr(entity, "attackable"):
                     if self.player.equipped != None: # Update the callback of the attack button based on the weapon
-                        attackAction.availableButton.callback = lambda : self.player.equipped.resolveAttack(self.player, entity, self.levelState, self.tempAnimations)
+                        # TODO: find better way to make sure turn ends when necessary
+                        def attackAndEnd():
+                            self.player.equipped.resolveAttack(self.player,entity, self.levelState,self.tempAnimations)
+                            self.nextTurn()
+                        #attackAction.availableButton.callback = lambda : self.player.equipped.resolveAttack(self.player, entity, self.levelState, self.tempAnimations)
+                        attackAction.availableButton.callback = attackAndEnd
                     else:
                         attackAction.availableButton.callback = lambda : print("Player cannont attack: equipped weapon = None")
                     popupButtons.append(attackAction.availableButton)
@@ -238,10 +253,19 @@ class Exploration(State):
         for anim in finishedAnimations:
             self.tempAnimations.remove(anim)
         
+        #check for pauses in game logic
+        if self.gameplayPause > 0:
+            self.gameplayPause -= self.game.clock.get_time()
+            if self.gameplayPause < 0: self.gameplayPause = 0
+            return
+
         # Handle parts of the turn taking scheme
         if self.turnTakers[self.turnTakerIndex] == self.player:
             pass #update the players action if they have one. if they don't have one, do nothing
         else:
+            if isinstance(self.turnTakers[self.turnTakerIndex], BasicEnemy):
+                self.turnTakers[self.turnTakerIndex].basicTakeTurn(self.levelState, self.tempAnimations)
+                self.nextTurn()
             pass #update the ai's action if they have one. if they don't have one, query them for an update.
         
 
@@ -288,6 +312,7 @@ class Exploration(State):
     def render(self):
         self.levelState.tileMap.draw(self.game.screen)
         self.levelState.tileMap.drawCoverDebug(self.game.screen)
+        self.levelState.tileMap.drawDebug(self.game.screen)
         for actor in self.levelState.entities:
             self.game.screen.blit(actor.image, actor.rect)
         
