@@ -233,6 +233,22 @@ class GameMap:
         
         for rect in self.getHalfCover():
             pg.draw.rect(screen, "yellow", rect)
+    
+    def checkLineOfSight(self, tile1: tile, tile2: tile):
+        '''
+        Checks for line of sight between two tiles. Returns True if line of sight is not obstructed by *FULL COVER*
+        '''
+        x1, y1 = self.tileToPixel(tile1)
+        x2, y2 = self.tileToPixel(tile2)
+        for rect in self.getFullCover():
+            if rect.clipline(x1, y1, x2, y2) != ():
+                return False
+        return True
+
+    def drawDebugLineOfSight(self, tile1: tile, tile2: tile, surface: pg.surface.Surface):
+        color = "green" if self.checkLineOfSight(tile1, tile2) else "red"
+        pg.draw.line(surface, color, self.tileToPixel(tile1, center=True), self.tileToPixel(tile2, center=True))
+
 # def readManifest(name) -> dict[str, tuple[pg.Surface, pg.Rect]]:
 #     '''
 #     reads in list of number that correspond to different tiles
