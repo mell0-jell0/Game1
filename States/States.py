@@ -2,9 +2,7 @@ import math
 
 from pygame.sprite import AbstractGroup
 from utility import *
-from Player import *
 from Entities import *
-from BasicEnemy import *
 from gameMap import *
 
 
