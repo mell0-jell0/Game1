@@ -61,6 +61,7 @@ class Shotgun(Weapon):
         animation.rect.topleft = levelState.tileMap.tileToPixel(attacker.tileLocation, center=True)
         animation.rect.topleft = animation.rect.topleft[0]-offset[0], animation.rect.topleft[1]-offset[1]
         animationSet.add(animation)
+        target.attackable.takeDmg(3)
         # recenter the animation rect to be where its supposed to be
         # rotate the attack animation and add it to the animation set.
         # resolvee the actual attack effects
