@@ -56,13 +56,23 @@ class Exploration(State):
         self.levelState = levelState
         
         #Make sure entities draw locations are their tile locations
-        for actor in self.levelState.entities:
-            actor.rect.topleft = self.levelState.tileMap.tileToPixel(actor.tileLocation)
+        for entity in self.levelState.entities:
+            entity.rect.topleft = self.levelState.tileMap.tileToPixel(entity.tileLocation)
 
+        #Update every entity to have a reference to its containing list. Allows entity to remove itself or add new.
+        for entity in self.levelState.entities:
+            entity.entityList = self.levelState.entities
+        
         self.player: Player = player
 
         #Turn Management
         self.turnTakers: list[MapEntity] = [entity for entity in levelState.entities if hasattr(entity, "turnTaker")] 
+        '''TODO: fix this mess >_<. TurnTaker should maybe be a subclass of MapEntity 
+        or the turntaker list should be constructed as needed by querying the entities
+        in any case this is a pain and confusing. Removing something from entities 
+        doesn't remove it from turntakers and gets confusing'''
+        for entity in self.turnTakers:
+            entity.turnTaker.turnTakerList = self.turnTakers
         self.turnTakerIndex: int = 0
 
         #MENU UI
@@ -124,6 +134,7 @@ class Exploration(State):
         '''
         self.turnTakerIndex = (self.turnTakerIndex + 1) % len(self.turnTakers)
         self.gameplayPause = 1000
+        print(f"TurnTakerIndex is {self.turnTakerIndex}")
     
     def getClickType(self, clickPos: tuple[int, int]) -> tuple[ClickType, Any]:
         '''
@@ -327,6 +338,9 @@ class Exploration(State):
         
         for anim in self.tempAnimations:
             anim.draw(self.game.screen)
+        
+        for entity in self.levelState.entities[1:]:
+            self.levelState.tileMap.drawDebugLineOfSight(entity.tileLocation, self.player.tileLocation, self.game.screen)
 
 
     class GrenadeTargeting(State):

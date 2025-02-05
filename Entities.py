@@ -23,6 +23,8 @@ class MapEntity(pg.sprite.Sprite):
         self.image = image
         self.rect = rect
         self.tileLocation = (0,0)
+        # the list that contains this entity. For the purposes of spawning or removing entities
+        self.entityList = []
     
     def setTileLocation(self, tileLoc:tuple[int, int]):
         self.tileLocation = tileLoc
@@ -33,8 +35,8 @@ class LevelState:
     Contains reference to the tile-map and list of all mapentities
     '''
     def __init__(self, tileMap: GameMap, entities: list[MapEntity], playerCharacter):
-        self.tileMap = tileMap
-        self.entities = entities
+        self.tileMap: GameMap = tileMap
+        self.entities: list[MapEntity] = entities
         self.playerCharacter = playerCharacter
 
 class Attackable:
@@ -42,9 +44,16 @@ class Attackable:
     Component that facilitates the attacking system
     Can be used for characters/NPCs or things such as destructible environment objects
     '''
-    def __init__(self, maxHp) -> None:
+    def __init__(self, maxHp, on0hp) -> None:
         self.maxHp = maxHp
         self.hp = maxHp
+        self.on0hp = on0hp
+    
+    def takeDmg(self, Dmg):
+        '''
+        Used to notify the attackable that it has taken damage (i.e. to further trigger death effects when reaching 0hp)'''
+        self.hp -= Dmg
+        if self.hp <= 0: self.on0hp()
 
 from Item import *
 
@@ -57,6 +66,7 @@ class TurnTaker:
         self.takeTurn = takeTurn
         self.isPlayer = isPlayer
         self.currentAction:TurnAction | None = None
+        self.turnTakerList = []
 
 class Inventory:
     '''
@@ -73,7 +83,9 @@ class Player(MapEntity):
         super().__init__(image, rect)
         self.inventory: Inventory = Inventory()
         self.equipped: Weapon | None = None
-        self.attackable: Attackable = Attackable(maxHp=10)
+        def onDeath():
+            print("Player has died")
+        self.attackable: Attackable = Attackable(maxHp=10, on0hp=onDeath)
         self.turnTaker = TurnTaker(lambda: print("take turn not implemented for Player"), True)
 
 
@@ -81,7 +93,17 @@ class BasicEnemy(MapEntity):
     def __init__(self, image, rect):
         pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
-        self.attackable: Attackable = Attackable(maxHp=10)
+
+        def onDeath():
+            print("BasicEnemy Died")
+            if self.entityList.count(self) == 1:
+                self.entityList.remove(self)
+                self.turnTaker.turnTakerList.remove(self)
+                print(self.entityList)
+            else:
+                print("Entity tried to remove itself from list that does not contain it")
+
+        self.attackable: Attackable = Attackable(maxHp=10, on0hp=onDeath)
         self.interactable: Interactable = Interactable()
         self.turnTaker = TurnTaker(lambda:print("Turn taking not implemented for BasicEnemy"), False)
 
@@ -94,6 +116,8 @@ class BasicEnemy(MapEntity):
                 print("we want to attack character")
                 shotgun = testWeapon
                 shotgun.resolveAttack(self, entity, levelState, animationSet)
+        
+        # This is where much heavier "AI" logic goes if you want to make something bigger. Data from the game map will be the most helpful with decision making
             
 
 # class AIController:
