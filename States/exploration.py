@@ -91,7 +91,8 @@ class Exploration(State):
         self.UIbox.width = screenRect.width // 6
         self.UIbox.topright = screenRect.topright
 
-        self.inventoryButton = Button(TextImg("Inventory").image, lambda: print("inventory button no callback"))
+        launchInventory = lambda : self.game.stateStack.append(InventoryMenu(self.game, self.levelState.tileMap, self.player, [],[],[]))
+        self.inventoryButton = Button(TextImg("Inventory").image,launchInventory)
         self.inventoryButton.rect.topleft = self.UIbox.topleft
         self.activeButtons.add(self.inventoryButton)
         self.UIelements.add(self.inventoryButton)
@@ -143,10 +144,16 @@ class Exploration(State):
         In the case of a game object, a reference to the object is returned
         In the case of a map tile, the tuple for that tile is returned
         '''
+        print(self.activeButtons)
         #First process clicks on buttons
         for button in self.activeButtons:
             if button.rect.collidepoint(clickPos):
                 return (self.ClickType.BUTTON, button)
+
+        if self.activePopup != None:
+            for button in self.activePopup.buttons:
+                if button.rect.collidepoint(clickPos):
+                    return (self.ClickType.BUTTON, button)
         #Check that click is over map
         if not self.levelState.tileMap.rect.collidepoint(clickPos): return (self.ClickType.INVALID, None)
         #Check for clicked entity
@@ -166,9 +173,10 @@ class Exploration(State):
         #Reset tracking variables
         self.path.clear()
         self.pathChain.clear()
+        if self.activePopup != None:
+            for button in self.activePopup.buttons:
+                self.activeButtons.remove(button)
         self.activePopup = None
-        self.activeButtons.clear()
-
         match self.currClickType:
             case (self.ClickType.MAP_TILE, tile):
                 assert(isinstance(tile, tuple))

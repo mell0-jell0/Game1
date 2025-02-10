@@ -81,7 +81,7 @@ class Player(MapEntity):
     def __init__(self, image, rect):
         pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
-        self.inventory: Inventory = Inventory()
+        self.inventory: list[Item] = []
         self.equipped: Weapon | None = None
         def onDeath():
             print("Player has died")
@@ -99,7 +99,9 @@ class BasicEnemy(MapEntity):
             if self.entityList.count(self) == 1:
                 self.entityList.remove(self)
                 self.turnTaker.turnTakerList.remove(self)
-                print(self.entityList)
+                # import gc
+                # for idx, refr in enumerate(gc.get_referrers(self)):
+                #     print(f"Referrer #{idx} is {refr}")
             else:
                 print("Entity tried to remove itself from list that does not contain it")
 
