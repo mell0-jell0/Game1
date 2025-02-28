@@ -6,6 +6,9 @@ DEBUG = False
 tile = tuple[int, int]
 tileId = str
 class GameMap:
+    SHORT_RANGE = 5
+    MED_RANGE = 10
+    LONG_RANGE = 15
     '''
     reads the manifest and csv, loads in tile textures, and handles the underlying pathing of the map
     '''

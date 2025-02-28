@@ -22,7 +22,7 @@ class Exploration(State):
             self.levelState = levelState
             self.path = path
             self.entity = entity
-            self.TIME_PER_TILE = 200 # time in ms
+            self.TIME_PER_TILE = 130 # time in ms
             self.stepProgress = 0
         
         def update(self, deltaTime):
@@ -347,8 +347,25 @@ class Exploration(State):
         for anim in self.tempAnimations:
             anim.draw(self.game.screen)
         
-        for entity in self.levelState.entities[1:]:
-            self.levelState.tileMap.drawDebugLineOfSight(entity.tileLocation, self.player.tileLocation, self.game.screen)
+         #for entity in self.levelState.entities[1:]:
+             #self.levelState.tileMap.drawDebugLineOfSight(entity.tileLocation, self.player.tileLocation, self.game.screen)
+        # Draw attack UI
+        match self.currClickType:
+            case None:
+                pass
+            case (self.ClickType.ENTITY, entity):
+                if hasattr(entity, "attackable") and self.player.equipped:
+                    print("we should be drawing")
+                    self.player.equipped.drawUI(self.player, entity, self.levelState, self.game.screen)
+        
+
+        # Hover over effects
+        for entity in self.levelState.entities:
+            if hasattr(entity, "attackable"):
+                left, top = self.levelState.tileMap.tileToPixel(entity.tileLocation)
+                rect = pg.rect.Rect(left, top, self.levelState.tileMap.TILE_WIDTH, self.levelState.tileMap.TILE_WIDTH)
+                if rect.collidepoint(pg.mouse.get_pos()):
+                    self.player.equipped.drawUI(self.player, entity, self.levelState, self.game.screen)
 
 
     class GrenadeTargeting(State):

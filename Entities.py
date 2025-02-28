@@ -23,6 +23,8 @@ class MapEntity(pg.sprite.Sprite):
         self.image = image
         self.rect = rect
         self.tileLocation = (0,0)
+
+        self.defaultInteraction = None
         # the list that contains this entity. For the purposes of spawning or removing entities
         self.entityList = []
     
@@ -93,6 +95,7 @@ class BasicEnemy(MapEntity):
     def __init__(self, image, rect):
         pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
+        self.defaultInteraction = Attackable
 
         def onDeath():
             print("BasicEnemy Died")
@@ -113,11 +116,14 @@ class BasicEnemy(MapEntity):
         '''
         Function called by active game state to have character make decision
         '''
+        # attempts to attack the player if in sight. Otherwise wanders around
+        # how do characters know if a tile is occupied?
         for entity in levelState.entities:
             if entity == levelState.playerCharacter:
                 print("we want to attack character")
                 shotgun = testWeapon
                 shotgun.resolveAttack(self, entity, levelState, animationSet)
+        
         
         # This is where much heavier "AI" logic goes if you want to make something bigger. Data from the game map will be the most helpful with decision making
             

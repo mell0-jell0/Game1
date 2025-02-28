@@ -2,11 +2,12 @@ import math
 from abc import ABC
 from Entities import Attackable, LevelState
 from utility import *
+from gameMap import *
 
 
 class Item(pg.sprite.Sprite):
     '''
-    Class for item trakcing. Intended to be used with inventory component.
+    Class for item tracking. Intended to be used with inventory component.
     '''
     def __init__(self, imgName, type, description="generic item") -> None:
         super().__init__()
@@ -17,6 +18,15 @@ class Item(pg.sprite.Sprite):
 #if its a weapon it can deal damage and needs to handle that kind of logic
 
 from Entities import MapEntity, LevelState, Attackable
+
+class MedKit(Item):
+    def __init__(self, imgName, type):
+        super().__init__(imgName, type, "basic med kit")
+    def use(self, target):
+        assert(hasattr("Attackable", target))
+        target.attackable.hp+=3
+        print("Just healed target for 3 damage")
+
 class Weapon(Item):
     '''asbtract class for weapon types so that they can be equipped'''
     def __init__(self, imgName, type, attackAnim, attackCost: int, description="generic weapon") -> None:
@@ -28,9 +38,16 @@ class Weapon(Item):
         assert(hasattr(target, "attackable"))
         print("resolveAttack not implemented for this weapon")
 
+    def drawUI(self, attacker: MapEntity, target: MapEntity, levelState: LevelState, screen: pg.surface.Surface):
+        print(f"DrawUI not Implemented for {self}")
+
 class Shotgun(Weapon):
     def __init__(self, imgName, type, attackAnim, attackCost, description="generic weapon") -> None:
         super().__init__(imgName, type, attackAnim, attackCost, description)
+        self.rangeNumbers = [
+            1, 3, 5,
+            11, 13, 18 
+        ]
     
     def resolveAttack(self, attacker: MapEntity, target: MapEntity, levelState: LevelState, animationSet: set[EffectAnimation]):
         assert(hasattr(target, "attackable"))
@@ -61,9 +78,23 @@ class Shotgun(Weapon):
         animation.rect.topleft = levelState.tileMap.tileToPixel(attacker.tileLocation, center=True)
         animation.rect.topleft = animation.rect.topleft[0]-offset[0], animation.rect.topleft[1]-offset[1]
         animationSet.add(animation)
-        target.attackable.takeDmg(3)
+        if levelState.tileMap.checkLineOfSight(attacker.tileLocation, target.tileLocation):
+            target.attackable.takeDmg(3)
+        else:
+            print("There's no line of sight")
         # recenter the animation rect to be where its supposed to be
         # rotate the attack animation and add it to the animation set.
         # resolvee the actual attack effects
         
+    def drawUI(self, attacker: MapEntity, target: MapEntity, levelState: LevelState, screen: pg.surface.Surface):
+        attackX, attackY = levelState.tileMap.tileToPixel(attacker.tileLocation, center=True)
+        targetX, targetY= levelState.tileMap.tileToPixel(target.tileLocation, center=True)
+        line: tuple[tuple[int,int],tuple[int, int]] = ((attackX, attackY),(targetX, targetY))
+        blocked = False
+        for rect in levelState.tileMap.getFullCover():
+            if rect.clipline(line) != ():
+                blocked = True
+        color = "grey" if blocked else "green"
+        pg.draw.line(screen, color, *line)
+
 testWeapon = Shotgun("bolty1.png", "weapon", EffectAnimation(load_images("bulletAnim"), 100//15), 1)
