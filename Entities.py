@@ -126,7 +126,19 @@ class BasicEnemy(MapEntity):
         
         
         # This is where much heavier "AI" logic goes if you want to make something bigger. Data from the game map will be the most helpful with decision making
-            
+
+class Container(MapEntity):
+    def __init__(self, image, rect, initialItems: list[Item] = []):
+        super().__init__(image, rect)
+        self.interactable = Interactable()
+        self.items = initialItems
+    def interact(self):
+        print("container clicked on") 
+    
+    def getItems(self, item):
+        '''Returns specific item and removes it from this container'''
+        self.items.remove(item)
+        return item
 
 # class AIController:
 #     '''
