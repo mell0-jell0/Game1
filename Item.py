@@ -14,7 +14,6 @@ class Item(pg.sprite.Sprite):
         self.image , self.rect = load_image(imgName)
         self.description = description
 
-
 #if its a weapon it can deal damage and needs to handle that kind of logic
 
 from Entities import MapEntity, LevelState, Attackable

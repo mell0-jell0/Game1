@@ -62,7 +62,29 @@ class InventoryMenu(State):
         self.img = pg.Surface((self.menuRegion.width, self.menuRegion.height))
         self.img.fill((80,80,80))
 
-        self.activePopup = None
+        self.activePopup: Popup | None = None
+    
+    def handleLeftClick(self, pos: tuple[float, float]):
+        if self.activePopup != None:
+            for button in self.activePopup.buttons:
+                if button.rect.collidepoint(pos): button.callback()
+                break
+            self.activePopup = None
+        else:
+            #check for an item click
+            itemClicked = False
+            for invItem in self.player.inventory:
+                if invItem.rect.collidepoint(pos):
+                    itemClicked = True
+                    print("Should iterate over properties of weapon to generate more popup items")
+                    self.activePopup = Popup(
+                        [Button(TextImg("Drop").image, lambda: print("Should drop weapon"))],
+                        invItem.rect.center
+                    )
+                    self.activePopup.anchor = invItem.rect.center
+            
+            # if not itemClicked:
+                # self.activePopup = None
     
     def process(self, events: list[pg.event.Event]):
         for event in events:
@@ -70,23 +92,8 @@ class InventoryMenu(State):
                 print("should be popping inventory state from stack when state transitions are hooked up right")
                 self.game.stateStack.pop()
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+                self.handleLeftClick(event.pos)
                 #default to popup
-                if self.activePopup != None:
-                    if self.activePopup.pointCollide(event.pos):
-                        self.activePopup.handleClick(event.pos)
-                    else:
-                        self.activePopup = None
-                else:
-                    #check for an item click
-                    itemClicked = False
-                    for invItem in self.player.inventory:
-                        if invItem.rect.collidepoint(event.pos):
-                            itemClicked = True
-                            self.activePopup = invItem.popup
-                            self.activePopup.location = invItem.rect.center
-                    
-                    if not itemClicked:
-                        self.activePopup = None
 
 
     def update(self):
@@ -132,5 +139,10 @@ class InventoryMenu(State):
         
         #render the active popup
         if self.activePopup != None:
-            self.activePopup.draw(self.game.screen)
-    
+            popupOffset = 0
+            for button in self.activePopup.buttons:
+                self.game.screen.blit(
+                    button.image,
+                    (self.activePopup.anchor[0], self.activePopup.anchor[1]+popupOffset)
+                )
+                popupOffset+=button.image.get_rect().height

@@ -129,6 +129,7 @@ class BasicEnemy(MapEntity):
 
 class Container(MapEntity):
     def __init__(self, image, rect, initialItems: list[Item] = []):
+        pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
         self.interactable = Interactable()
         self.items = initialItems
@@ -139,6 +140,7 @@ class Container(MapEntity):
         '''Returns specific item and removes it from this container'''
         self.items.remove(item)
         return item
+
 
 # class AIController:
 #     '''
