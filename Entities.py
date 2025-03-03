@@ -1,5 +1,6 @@
 # TODO: Fix or make more elegant the "almost circular" imports between items and entities
 # perhaps split each separate component into a different file. this might be cumbersome. think about it.
+# TODO: Pick multiple inheritance or composition. MultiInheritance makes more sense for Interactables because you need lots of methods to call for them.
 from typing import Any
 from utility import *
 from gameMap import *
@@ -30,6 +31,9 @@ class MapEntity(pg.sprite.Sprite):
     
     def setTileLocation(self, tileLoc:tuple[int, int]):
         self.tileLocation = tileLoc
+    
+    def getInfo(self):
+        print(f"getInfo unimplemented for {self}")
 
 class LevelState:
     '''
@@ -77,7 +81,15 @@ class Inventory:
     pass
 
 class Interactable:
-    pass
+    def canInteract(self, levelState: LevelState, interactor: MapEntity):
+        print(f"canInteract not implemented for {self}")
+    
+    def getInteractInfo(self, levelState: LevelState, interactor: MapEntity):
+        text = f"getInteractInfo not implemented for {self}"
+        print(text)
+        return text
+
+    
 
 class Player(MapEntity):
     def __init__(self, image, rect):
@@ -91,7 +103,7 @@ class Player(MapEntity):
         self.turnTaker = TurnTaker(lambda: print("take turn not implemented for Player"), True)
 
 
-class BasicEnemy(MapEntity):
+class BasicEnemy(MapEntity, Interactable):
     def __init__(self, image, rect):
         pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
@@ -109,7 +121,6 @@ class BasicEnemy(MapEntity):
                 print("Entity tried to remove itself from list that does not contain it")
 
         self.attackable: Attackable = Attackable(maxHp=10, on0hp=onDeath)
-        self.interactable: Interactable = Interactable()
         self.turnTaker = TurnTaker(lambda:print("Turn taking not implemented for BasicEnemy"), False)
 
     def basicTakeTurn(self, levelState: LevelState, animationSet: set[EffectAnimation]):
@@ -127,14 +138,30 @@ class BasicEnemy(MapEntity):
         
         # This is where much heavier "AI" logic goes if you want to make something bigger. Data from the game map will be the most helpful with decision making
 
-class Container(MapEntity):
+class Container(MapEntity, Interactable):
     def __init__(self, image, rect, initialItems: list[Item] = []):
         pg.sprite.Sprite.__init__(self)
         super().__init__(image, rect)
-        self.interactable = Interactable()
         self.items = initialItems
     def interact(self):
         print("container clicked on") 
+    
+    def canInteract(self, levelState: LevelState, interactor: MapEntity):
+        if levelState.tileMap.calcDistance(self.tileLocation, interactor.tileLocation) == 1:
+            return True
+        else:
+            return False
+    
+    def getInteractInfo(self, levelState: LevelState, interactor: MapEntity):
+        if levelState.tileMap.calcDistance(self.tileLocation, interactor.tileLocation) == 1:
+            text = f"You are close enough to interact with object ({self})"
+        else:
+            text = f"Move close to interact with this object ({self})"
+        print(text)
+        return text
+    
+    def displayInfo(self):
+        print("Interact with this contianer to obtain items")
     
     def getItems(self, item):
         '''Returns specific item and removes it from this container'''

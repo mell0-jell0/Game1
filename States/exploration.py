@@ -177,6 +177,7 @@ class Exploration(State):
             for button in self.activePopup.buttons:
                 self.activeButtons.remove(button)
         self.activePopup = None
+
         match self.currClickType:
             case (self.ClickType.MAP_TILE, tile):
                 assert(isinstance(tile, tuple))
@@ -223,8 +224,12 @@ class Exploration(State):
                     else:
                         attackAction.availableButton.callback = lambda : print("Player cannont attack: equipped weapon = None")
                     popupButtons.append(attackAction.availableButton)
-                if hasattr(entity, "interactable"):
-                    popupButtons.append(interactAction.availableButton)
+                if isinstance(entity, Interactable):
+                    entity.getInteractInfo(self.levelState, self.player)
+                    if entity.canInteract(self.levelState, self.player):
+                        popupButtons.append(interactAction.availableButton)
+                    else:
+                        popupButtons.append(interactAction.unavailableButton)
                 
                 self.activePopup = Popup(popupButtons, self.levelState.tileMap.tileToPixel(entity.tileLocation, center=True))
                 topLeftPointer = self.activePopup.anchor
@@ -334,8 +339,10 @@ class Exploration(State):
         self.levelState.tileMap.drawDebug(self.game.screen)
         for actor in self.levelState.entities:
             self.game.screen.blit(actor.image, actor.rect)
-        
+
+        # Draw UI 
         self.drawPathChain()
+        pg.draw.rect(self.game.screen, "grey", self.UIbox)
         self.UIelements.draw(self.game.screen)
 
         if self.activePopup != None:
@@ -355,7 +362,6 @@ class Exploration(State):
                 pass
             case (self.ClickType.ENTITY, entity):
                 if hasattr(entity, "attackable") and self.player.equipped:
-                    print("we should be drawing")
                     self.player.equipped.drawUI(self.player, entity, self.levelState, self.game.screen)
         
 
