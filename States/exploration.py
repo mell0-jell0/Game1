@@ -91,7 +91,12 @@ class Exploration(State):
         self.UIbox.width = screenRect.width // 6
         self.UIbox.topright = screenRect.topright
 
-        launchInventory = lambda : self.game.stateStack.append(InventoryMenu(self.game, self.levelState.tileMap, self.player, [],[],[]))
+        launchInventory = lambda : self.game.stateStack.append(
+            InventoryMenu(self.game,
+                          self.levelState.tileMap,
+                          self.player, 
+                          [],[],[])
+            )
         self.inventoryButton = Button(TextImg("Inventory").image,launchInventory)
         self.inventoryButton.rect.topleft = self.UIbox.topleft
         self.activeButtons.add(self.inventoryButton)
@@ -226,10 +231,20 @@ class Exploration(State):
                     popupButtons.append(attackAction.availableButton)
                 if isinstance(entity, Interactable):
                     entity.getInteractInfo(self.levelState, self.player)
+
+                    if isinstance(entity, Container): 
+                        interactAction.availableButton.callback = lambda : self.game.stateStack.append(
+                        InventoryMenu(self.game,
+                                    self.levelState.tileMap,
+                                    self.player, 
+                                    [],[],[], activeContainer=entity)
+                        )
+
                     if entity.canInteract(self.levelState, self.player):
                         popupButtons.append(interactAction.availableButton)
                     else:
                         popupButtons.append(interactAction.unavailableButton)
+                    
                 
                 self.activePopup = Popup(popupButtons, self.levelState.tileMap.tileToPixel(entity.tileLocation, center=True))
                 topLeftPointer = self.activePopup.anchor

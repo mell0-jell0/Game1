@@ -47,7 +47,7 @@ class StartMenu(State):
 
 
 class InventoryMenu(State):
-    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list):
+    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list, activeContainer: Container | None = None):
         self.game = game
         self.tileMap = tileMap
         self.player = player
@@ -63,6 +63,7 @@ class InventoryMenu(State):
         self.img.fill((80,80,80))
 
         self.activePopup: Popup | None = None
+        self.activeContainer = activeContainer
     
     def handleLeftClick(self, pos: tuple[float, float]):
         if self.activePopup != None:
@@ -146,3 +147,18 @@ class InventoryMenu(State):
                     (self.activePopup.anchor[0], self.activePopup.anchor[1]+popupOffset)
                 )
                 popupOffset+=button.image.get_rect().height
+        
+        # If interacting with container, draw its contents/menu
+        if self.activeContainer == None: return
+        containerRegion = pg.rect.Rect(0,
+                                       0,
+                                       self.game.screen.get_rect().width // 3,
+                                       self.game.screen.get_rect().width // 3)
+        pg.draw.rect(self.game.screen, "gray",containerRegion)
+        text = TextImg("Container Contents")
+        self.game.screen.blit(text.image, (0,0))
+
+        yOffset = text.image.get_rect().height
+        for item in self.activeContainer.items:
+            self.game.screen.blit(item.image, (0,yOffset))
+            yOffset += item.image.get_rect().height

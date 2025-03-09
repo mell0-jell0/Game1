@@ -63,7 +63,7 @@ bigMap = GameMap("manifest.csv", "testmap.csv")
 weapon1 = Shotgun("bolty1.png", "weapon", EffectAnimation(load_images("bulletAnim"), 100//15), 1)
 item1 = Item("bolty1.png", "placeholder type")
 item2 = MedKit("medKit1.png", "placeholder type")
-testContainer = Container(*load_image("cardBoardBox.png"))
+testContainer = Container(*load_image("cardBoardBox.png"),[weapon1, item1, item2])
 
 #player = Character("16guySmaller.png", 10, "placeholder weapon", pg.sprite.Group([item1, item2]))
 player = Player(*load_image("16GuySmaller.png"))
