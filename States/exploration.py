@@ -380,7 +380,7 @@ class Exploration(State):
                     self.player.equipped.drawUI(self.player, entity, self.levelState, self.game.screen)
         
 
-        # Hover over effects
+        # Hover over effects of weapon
         for entity in self.levelState.entities:
             if hasattr(entity, "attackable"):
                 left, top = self.levelState.tileMap.tileToPixel(entity.tileLocation)

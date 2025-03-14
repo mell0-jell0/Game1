@@ -101,6 +101,15 @@ class InventoryMenu(State):
         for character in self.allTurnTakers:
             character.rect.topleft = self.tileMap.tileToPixel(character.tileLocation)
 
+        # Check for interactions with the container        
+        if self.activeContainer == None: return
+
+        yOffset = TextImg("test").image.get_rect().height
+        for item in self.activeContainer.items:
+            item.rect.topleft = (0, yOffset)
+            yOffset += item.image.get_rect().height
+        
+
     def render(self):
         #render all the stuff from the background
         self.tileMap.draw(self.game.screen)
@@ -158,7 +167,13 @@ class InventoryMenu(State):
         text = TextImg("Container Contents")
         self.game.screen.blit(text.image, (0,0))
 
-        yOffset = text.image.get_rect().height
         for item in self.activeContainer.items:
-            self.game.screen.blit(item.image, (0,yOffset))
-            yOffset += item.image.get_rect().height
+            self.game.screen.blit(item.image, item.rect)
+        
+        # Draw UI when hovering over item in container
+        text = TextImg("Take (1 Turn)", size=15)
+        for item in self.activeContainer.items:
+            if item.rect.collidepoint(pg.mouse.get_pos()):
+                text.rect.topleft = item.rect.topright
+                text.rect.centery = item.rect.centery
+                self.game.screen.blit(text.image, text.rect)
