@@ -4,14 +4,19 @@ from gameMap import *
 from Entities import *
 from action import *
 
+
+
+
 class Exploration(State):
+    '''
+    free roam tile map exploration. you walk where you click and you can interact with characters and items in this mode. triggers Turn control when within range of enemy. will also be able to trigger fishing later
+    '''
     class ClickType(enum.Enum):
         ENTITY = enum.auto()
         MAP_TILE = enum.auto()
         BUTTON = enum.auto()
         INVALID = enum.auto()
-    
-    
+
     class PathWalk(MultiFrameAction):
         '''
         MultiFrameAction subclass for walking paths on the map
@@ -47,9 +52,7 @@ class Exploration(State):
                 pass
             # do the path walking algorithm
             # at every step get the time. add the time to the progress bar, linterp the characters position between the two tiles. If the progress is >= 100 then place them on the tile and move on to the next step in the path 
-    '''
-    free roam tile map exploration. you walk where you click and you can interact with characters and items in this mode. triggers Turn control when within range of enemy. will also be able to trigger fishing later
-    '''
+
     def __init__(self, game, levelState: LevelState, player: Player) -> None:
         self.game = game
 
@@ -59,21 +62,17 @@ class Exploration(State):
         for entity in self.levelState.entities:
             entity.rect.topleft = self.levelState.tileMap.tileToPixel(entity.tileLocation)
 
-        #Update every entity to have a reference to its containing list. Allows entity to remove itself or add new.
-        for entity in self.levelState.entities:
-            entity.entityList = self.levelState.entities
-        
         self.player: Player = player
 
         #Turn Management
-        self.turnTakers: list[MapEntity] = [entity for entity in levelState.entities if hasattr(entity, "turnTaker")] 
         '''TODO: fix this mess >_<. TurnTaker should maybe be a subclass of MapEntity 
         or the turntaker list should be constructed as needed by querying the entities
         in any case this is a pain and confusing. Removing something from entities 
         doesn't remove it from turntakers and gets confusing'''
-        for entity in self.turnTakers:
-            entity.turnTaker.turnTakerList = self.turnTakers
         self.turnTakerIndex: int = 0
+
+        #Event handling queue
+        self.eventQ = deque()
 
         #MENU UI
         self.UIelements = pg.sprite.Group()
@@ -138,7 +137,7 @@ class Exploration(State):
         Modular increment of turnTakerIndex
         sets gameplayPause to 1000
         '''
-        self.turnTakerIndex = (self.turnTakerIndex + 1) % len(self.turnTakers)
+        self.turnTakerIndex = (self.turnTakerIndex + 1) % len(self.levelState.turnTakers)
         self.gameplayPause = 1000
         print(f"TurnTakerIndex is {self.turnTakerIndex}")
     
@@ -292,6 +291,11 @@ class Exploration(State):
         for anim in finishedAnimations:
             self.tempAnimations.remove(anim)
         
+        # Process all enqueud events
+        while len(self.eventQ) != 0:
+            event = self.eventQ.popleft()
+            event(self.levelState)
+
         #check for pauses in game logic
         if self.gameplayPause > 0:
             self.gameplayPause -= self.game.clock.get_time()
@@ -299,11 +303,12 @@ class Exploration(State):
             return
 
         # Handle parts of the turn taking scheme
-        if self.turnTakers[self.turnTakerIndex] == self.player:
+        self.turnTakerIndex %= len(self.levelState.turnTakers)
+        if self.levelState.turnTakers[self.turnTakerIndex] == self.player:
             pass #update the players action if they have one. if they don't have one, do nothing
         else:
-            if isinstance(self.turnTakers[self.turnTakerIndex], BasicEnemy):
-                self.turnTakers[self.turnTakerIndex].basicTakeTurn(self.levelState, self.tempAnimations)
+            if isinstance(self.levelState.turnTakers[self.turnTakerIndex], BasicEnemy):
+                self.levelState.turnTakers[self.turnTakerIndex].basicTakeTurn(self.levelState, self.tempAnimations)
                 self.nextTurn()
             pass #update the ai's action if they have one. if they don't have one, query them for an update.
         

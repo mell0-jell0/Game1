@@ -20,15 +20,15 @@ class MapEntity(pg.sprite.Sprite):
         attributes which are components should be named as the lower camel-case of the class name of the component
         i.e. a MapEntity will have an attribute attackable of type Attackable.
     '''
-    def __init__(self, image, rect):
+    def __init__(self, image, rect, eventQ: deque):
+        pg.sprite.Sprite.__init__(self)
         self.image = image
         self.rect = rect
         self.tileLocation = (0,0)
 
         self.defaultInteraction = None
-        # the list that contains this entity. For the purposes of spawning or removing entities
-        self.entityList = []
-    
+        # the list that contains this entity. For the purposes of spawning or removing entities 
+
     def setTileLocation(self, tileLoc:tuple[int, int]):
         self.tileLocation = tileLoc
     
@@ -40,9 +40,10 @@ class LevelState:
     Object for encapsulating level data
     Contains reference to the tile-map and list of all mapentities
     '''
-    def __init__(self, tileMap: GameMap, entities: list[MapEntity], playerCharacter):
+    def __init__(self, tileMap: GameMap, entities: list[MapEntity], turnTakers: list[MapEntity], playerCharacter):
         self.tileMap: GameMap = tileMap
         self.entities: list[MapEntity] = entities
+        self.turnTakers: list[MapEntity] = turnTakers
         self.playerCharacter = playerCharacter
 
 class Attackable:
@@ -68,11 +69,9 @@ class TurnTaker:
     Class for entities that respond/take an action when the turn state is stepped over.
     Can be used for characters/NPCs or things such as traps, moving objects etc.
     '''
-    def __init__(self, takeTurn, isPlayer: bool) -> None:
+    def __init__(self, takeTurn) -> None:
         self.takeTurn = takeTurn
-        self.isPlayer = isPlayer
         self.currentAction:TurnAction | None = None
-        self.turnTakerList = []
 
 class Inventory:
     '''
@@ -91,37 +90,35 @@ class Interactable:
 
     
 
-class Player(MapEntity):
-    def __init__(self, image, rect):
-        pg.sprite.Sprite.__init__(self)
-        super().__init__(image, rect)
+class Player(MapEntity, TurnTaker):
+    def __init__(self, image, rect, eventQ):
+        super().__init__(image, rect, eventQ)
         self.inventory: list[Item] = []
         self.equipped: Weapon | None = None
         def onDeath():
             print("Player has died")
         self.attackable: Attackable = Attackable(maxHp=10, on0hp=onDeath)
-        self.turnTaker = TurnTaker(lambda: print("take turn not implemented for Player"), True)
-
+        TurnTaker.__init__(self, lambda: print("Take turn not implemented for player"))
 
 class BasicEnemy(MapEntity, Interactable):
-    def __init__(self, image, rect):
-        pg.sprite.Sprite.__init__(self)
-        super().__init__(image, rect)
+    def __init__(self, image, rect, eventQ):
+        MapEntity.__init__(self, image, rect, eventQ)
+        super().__init__(image, rect, eventQ)
         self.defaultInteraction = Attackable
 
-        def onDeath():
+        def onDeath(levelState: LevelState):
             print("BasicEnemy Died")
-            if self.entityList.count(self) == 1:
-                self.entityList.remove(self)
-                self.turnTaker.turnTakerList.remove(self)
+            if levelState.entities.count(self) == 1:
+                levelState.entities.remove(self)
+                levelState.turnTakers.remove(self)
                 # import gc
                 # for idx, refr in enumerate(gc.get_referrers(self)):
                 #     print(f"Referrer #{idx} is {refr}")
             else:
                 print("Entity tried to remove itself from list that does not contain it")
 
-        self.attackable: Attackable = Attackable(maxHp=10, on0hp=onDeath)
-        self.turnTaker = TurnTaker(lambda:print("Turn taking not implemented for BasicEnemy"), False)
+        self.attackable: Attackable = Attackable(maxHp=10, on0hp=lambda: eventQ.append(onDeath))
+        self.turnTaker = TurnTaker(lambda:print("Turn taking not implemented for BasicEnemy"))
 
     def basicTakeTurn(self, levelState: LevelState, animationSet: set[EffectAnimation]):
         '''
@@ -139,9 +136,8 @@ class BasicEnemy(MapEntity, Interactable):
         # This is where much heavier "AI" logic goes if you want to make something bigger. Data from the game map will be the most helpful with decision making
 
 class Container(MapEntity, Interactable):
-    def __init__(self, image, rect, initialItems: list[Item] = []):
-        pg.sprite.Sprite.__init__(self)
-        super().__init__(image, rect)
+    def __init__(self, image, rect, eventQ, initialItems: list[Item] = []):
+        MapEntity.__init__(self, image, rect, eventQ)
         self.items = initialItems
     def interact(self):
         print("container clicked on") 

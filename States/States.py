@@ -169,7 +169,7 @@ class InventoryMenu(State):
 
         for item in self.activeContainer.items:
             self.game.screen.blit(item.image, item.rect)
-        
+            print(f"Drawing item {item}") 
         # Draw UI when hovering over item in container
         text = TextImg("Take (1 Turn)", size=15)
         for item in self.activeContainer.items:
