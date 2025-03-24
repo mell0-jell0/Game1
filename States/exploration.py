@@ -175,6 +175,8 @@ class Exploration(State):
         self.lastClickType = self.currClickType
         self.currClickType = self.getClickType(event.pos)
         #Reset tracking variables
+        for action in self.multiFrameActions: #If there is an active pathwalk, don't process
+            if isinstance(action, MultiFrameAction): return
         self.path.clear()
         self.pathChain.clear()
         if self.activePopup != None:
@@ -185,6 +187,8 @@ class Exploration(State):
         match self.currClickType:
             case (self.ClickType.MAP_TILE, tile):
                 assert(isinstance(tile, tuple))
+                print(self.path)
+
                 print(f"clicked map tile {tile}")
                 totalPath = self.levelState.tileMap.getPath(self.player.tileLocation, tile)
                 if len(totalPath) < 1: return
