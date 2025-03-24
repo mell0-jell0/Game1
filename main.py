@@ -10,7 +10,7 @@ from utility import *
 from gameMap import *
 from Entities import *
 from Item import *
-from States.States import *
+from States.states import *
 from States.exploration import *
 
 '''

@@ -1,5 +1,6 @@
 import enum
-from States.States import *
+from States.states import *
+from States.inventory import *
 from gameMap import *
 from Entities import *
 from action import *
