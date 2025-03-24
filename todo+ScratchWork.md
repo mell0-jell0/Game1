@@ -1,5 +1,4 @@
 TODO: fix click handling so that path is not cleared if a pathwalk is active.
-TODO: add turn stepping
 TODO: do a consistency pass. Make functions act on objects consistently, make formatting consistent. are surfaces passed around, are (surface, rect) tuples passed around? where is the rect updated? I want to be able to use groups so the rects for the images need to be updated correctly.
 TODO: turn taking
     when its a players turn we need to be listening in the process function. When it is an NPC's turn we need to be operating in the update function. we need to handle multi-frame-processes in both of these functions.
@@ -21,3 +20,7 @@ NOTE: A problem I have now is that its a little bit unelegant and a pain in the 
 TODO: add code to make path walking arrow always point in correct direction.
 TODO: rework the architecture. Make the turn handling information passing less complicated.
 TODO: rework how the turnEnd function is passed around.
+TODO: add enemies dropping items on death
+TODO: add camera panning (should be easy to do with tilemap offset? ui would stay in the same place)
+
+TODO: add more weapons
