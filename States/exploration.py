@@ -316,6 +316,9 @@ class Exploration(State):
                 self.levelState.turnTakers[self.turnTakerIndex].basicTakeTurn(self.levelState, self.tempAnimations)
                 self.nextTurn()
             pass #update the ai's action if they have one. if they don't have one, query them for an update.
+
+        for entity in self.levelState.entities:
+            entity.rect.topleft = self.levelState.tileMap.tileToPixel(entity.tileLocation)
         
 
     def drawPathChain(self):
