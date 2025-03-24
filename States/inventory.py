@@ -1,4 +1,4 @@
-from states import *
+from States.states import *
 
 class InventoryMenu(State):
     def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list, activeContainer: Container | None = None):
@@ -27,13 +27,26 @@ class InventoryMenu(State):
             self.activePopup = None
         else:
             #check for an item click
-            itemClicked = False
             for invItem in self.player.inventory:
                 if invItem.rect.collidepoint(pos):
-                    itemClicked = True
+                    popupButtons = []
                     print("Should iterate over properties of weapon to generate more popup items")
+                    if self.activeContainer != None:
+                        def moveItem():
+                            print("moving item to container")
+                            self.player.inventory.remove(invItem)
+                            self.activeContainer.items.append(invItem)
+
+                        popupButtons.append(
+                            Button(TextImg("Transfer").image, moveItem)
+                        )
+
+                    popupButtons.append(
+                        Button(TextImg("Drop").image, lambda: print("Should drop weapon"))
+                    )
+
                     self.activePopup = Popup(
-                        [Button(TextImg("Drop").image, lambda: print("Should drop weapon"))],
+                        popupButtons,
                         invItem.rect.center
                     )
                     self.activePopup.anchor = invItem.rect.center
@@ -70,6 +83,14 @@ class InventoryMenu(State):
         for item in self.activeContainer.items:
             item.rect.topleft = (0, yOffset)
             yOffset += item.image.get_rect().height
+
+        if self.activePopup == None: return
+
+        yOffset = 0 
+        for button in self.activePopup.buttons:
+            button.rect.topleft = self.activePopup.anchor[0], self.activePopup.anchor[1] + yOffset
+            yOffset += button.rect.height
+            
         
 
     def render(self):
@@ -111,14 +132,12 @@ class InventoryMenu(State):
         
         #render the active popup
         if self.activePopup != None:
-            popupOffset = 0
             for button in self.activePopup.buttons:
                 self.game.screen.blit(
                     button.image,
-                    (self.activePopup.anchor[0], self.activePopup.anchor[1]+popupOffset)
-                )
-                popupOffset+=button.image.get_rect().height
-        
+                    button.rect
+                ) 
+
         # If interacting with container, draw its contents/menu
         if self.activeContainer == None: return
         containerRegion = pg.rect.Rect(0,
