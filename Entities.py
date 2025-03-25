@@ -111,6 +111,9 @@ class BasicEnemy(MapEntity, Interactable):
             if levelState.entities.count(self) == 1:
                 levelState.entities.remove(self)
                 levelState.turnTakers.remove(self)
+                loot = Container(*load_image("cardBoardBox.png"), eventQ, [])
+                loot.tileLocation = self.tileLocation
+                levelState.entities.append(loot)
                 # import gc
                 # for idx, refr in enumerate(gc.get_referrers(self)):
                 #     print(f"Referrer #{idx} is {refr}")
