@@ -29,16 +29,18 @@ class MultiFrameAction:
         print("update method for multiframeAction not implemented")
 
 class StartMenu(State):
-    def __init__(self, game) -> None:
+    def __init__(self, game, playState) -> None:
         self.game = game
         self.playButton = TextImg("Play")
         self.playButton.rect.center = game.screen.get_rect().center
+        self.playState = playState
 
     def process(self, events):
         super().process(events)
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
                 if self.playButton.rect.collidepoint(event.pos):
+                    self.game.enterState(self.playState)
                     print("go to next state")
 
     def render(self):

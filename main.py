@@ -83,8 +83,9 @@ expState.eventQ = eventQ
 # invState = InventoryMenu(game, bigMap, player, [enemy1], [], [])
 # grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], [enemy1, player])
 #transitionState = ExplorationTurnTransition(game, bigMap, player, [enemy1], [], [enemy1, player])
+startMenu = StartMenu(game, expState)
 
 print(bigMap.getFullCover())
 print(bigMap.getHalfCover())
-game.enterState(expState)
+game.enterState(startMenu)
 game.run()
