@@ -4,7 +4,7 @@
 from typing import Any
 from utility import *
 from gameMap import *
-from action import *
+# from action import * # TODO: remove this we are using own action class in this file
 
 '''
 Contains components used for entities and game logic
@@ -35,15 +35,42 @@ class MapEntity(pg.sprite.Sprite):
     def getInfo(self):
         print(f"getInfo unimplemented for {self}")
 
+
+class MultiTurnAction:
+    def __init__(self, skippable, progress, limit, onFinish = lambda: print("onFinish not implemented")) -> None:
+        self.skippable = skippable
+        self.progress = progress
+        self.limit = limit
+        self.finished = False
+        self.onFinish = onFinish
+    
+    def update(self):
+        '''Updates progess of action by 1 turn'''
+        self.progress+=1
+        if self.progress >= self.limit:
+            self.finished = True
+            self.onFinish()
+
+
+class TurnTaker:
+    '''
+    Class for entities that respond/take an action when the turn state is stepped over.
+    Can be used for characters/NPCs or things such as traps, moving objects etc.
+    '''
+    def __init__(self, takeTurn) -> None:
+        self.takeTurn = takeTurn
+        self.currentAction: MultiTurnAction | None = None
+
+
 class LevelState:
     '''
     Object for encapsulating level data
     Contains reference to the tile-map and list of all mapentities
     '''
-    def __init__(self, tileMap: GameMap, entities: list[MapEntity], turnTakers: list[MapEntity], playerCharacter):
+    def __init__(self, tileMap: GameMap, entities: list[MapEntity], turnTakers: list[TurnTaker], playerCharacter):
         self.tileMap: GameMap = tileMap
         self.entities: list[MapEntity] = entities
-        self.turnTakers: list[MapEntity] = turnTakers
+        self.turnTakers: list[TurnTaker] = turnTakers
         self.playerCharacter = playerCharacter
 
 class Attackable:
@@ -64,14 +91,6 @@ class Attackable:
 
 from Item import *
 
-class TurnTaker:
-    '''
-    Class for entities that respond/take an action when the turn state is stepped over.
-    Can be used for characters/NPCs or things such as traps, moving objects etc.
-    '''
-    def __init__(self, takeTurn) -> None:
-        self.takeTurn = takeTurn
-        self.currentAction:TurnAction | None = None
 
 class Inventory:
     '''
@@ -100,10 +119,11 @@ class Player(MapEntity, TurnTaker):
         self.attackable: Attackable = Attackable(maxHp=10, on0hp=onDeath)
         TurnTaker.__init__(self, lambda: print("Take turn not implemented for player"))
 
-class BasicEnemy(MapEntity, Interactable):
+class BasicEnemy(MapEntity, Interactable, TurnTaker):
     def __init__(self, image, rect, eventQ):
         MapEntity.__init__(self, image, rect, eventQ)
         super().__init__(image, rect, eventQ)
+        TurnTaker.__init__(self, lambda: print("Take turn not implemented for player"))
         self.defaultInteraction = Attackable
 
         def onDeath(levelState: LevelState):
@@ -121,7 +141,6 @@ class BasicEnemy(MapEntity, Interactable):
                 print("Entity tried to remove itself from list that does not contain it")
 
         self.attackable: Attackable = Attackable(maxHp=10, on0hp=lambda: eventQ.append(onDeath))
-        self.turnTaker = TurnTaker(lambda:print("Turn taking not implemented for BasicEnemy"))
 
     def basicTakeTurn(self, levelState: LevelState, animationSet: set[EffectAnimation]):
         '''

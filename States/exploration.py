@@ -309,13 +309,24 @@ class Exploration(State):
 
         # Handle parts of the turn taking scheme
         self.turnTakerIndex %= len(self.levelState.turnTakers)
-        if self.levelState.turnTakers[self.turnTakerIndex] == self.player:
-            pass #update the players action if they have one. if they don't have one, do nothing
-        else:
-            if isinstance(self.levelState.turnTakers[self.turnTakerIndex], BasicEnemy):
-                self.levelState.turnTakers[self.turnTakerIndex].basicTakeTurn(self.levelState, self.tempAnimations)
-                self.nextTurn()
-            pass #update the ai's action if they have one. if they don't have one, query them for an update.
+        match self.levelState.turnTakers[self.turnTakerIndex]:
+            case self.player:
+                #update the players action if they have one. if they don't have one, do nothing
+                if (self.player.currentAction == None): pass
+
+                #else process action
+                pass
+
+            case npc:
+                if npc.currentAction == None:
+                    #ask the AI for input
+                    if isinstance(self.levelState.turnTakers[self.turnTakerIndex], BasicEnemy):
+                        self.levelState.turnTakers[self.turnTakerIndex].basicTakeTurn(self.levelState, self.tempAnimations)
+                        self.nextTurn()
+                        pass
+                else:
+                    #deal with active action
+                    pass
 
         for entity in self.levelState.entities:
             entity.rect.topleft = self.levelState.tileMap.tileToPixel(entity.tileLocation)
