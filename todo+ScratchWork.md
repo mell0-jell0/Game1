@@ -24,3 +24,6 @@ TODO: add enemies dropping items on death
 TODO: add camera panning (should be easy to do with tilemap offset? ui would stay in the same place)
 
 TODO: add more weapons
+
+TODO: make drawing consistent. have sprite rects update consistently and then draw based off rect position.
+TODO: based on above, fix the way inventory draws items.

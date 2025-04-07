@@ -8,7 +8,8 @@ from gameMap import *
 
 class State:
     '''Abstract class for game states'''
-    def __init__(self) -> None:
+    def __init__(self, game) -> None:
+        self.game = game
         pass
     
     def process(self, events):
@@ -20,6 +21,31 @@ class State:
     def render(self):
         pass
 
+def drawLevelState(levelState: LevelState, screen: pg.surface.Surface):
+    '''Draws tilemap and entities onto screen'''
+    levelState.tileMap.draw(screen)
+    for entity in levelState.entities:
+        screen.blit(entity.image, levelState.tileMap.tileToPixel(entity.tileLocation))
+
+class UIBaseState(State):
+    '''Foundation that draws all levelState information. Acts a basis for UI states like targeting grenade throws or heal usage'''
+    def __init__(self, game, levelState):
+        self.game = game
+        self.levelState = levelState
+    
+    def process(self, events: list[pg.event.Event]):
+        pass
+
+    def update(self):
+        pass
+
+    def render(self):
+        '''Draws all of the basic levelstate'''
+        self.levelState.tileMap.draw(self.game.screen)
+        self.levelState.tileMap.drawCoverDebug(self.game.screen)
+        self.levelState.tileMap.drawDebug(self.game.screen)
+        for actor in self.levelState.entities:
+            self.game.screen.blit(actor.image, actor.rect)
 
 class MultiFrameAction:
     def __init__(self) -> None:
@@ -46,3 +72,12 @@ class StartMenu(State):
     def render(self):
         self.game.screen.fill("black")
         self.game.screen.blit(self.playButton.image, self.playButton.rect)
+
+class MedkitTargeting(State):
+    def __init__(self, game, levelState: LevelState) -> None:
+        super().__init__(game)
+        self.levelState = levelState
+
+    def render(self):
+        drawLevelState(self.levelState, self.game.screen)
+        return super().render()

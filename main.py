@@ -12,6 +12,7 @@ from Entities import *
 from Item import *
 from States.states import *
 from States.exploration import *
+from game import game
 
 '''
 ACKNOWLEDGEMENTS
@@ -22,36 +23,36 @@ My friend A. for convincing me to get started and keeping me accountable by aski
             
 
 # TODO: rework the game object so that autocomplete works and shared pygame state is easily and elegantly accessible
-class Game:
-    def __init__(self, screen:pg.surface.Surface) -> None:
-        self.stateStack: list[State] = []
-        self.WIN_WIDTH = 1280
-        self.WIN_HEIGHT = 720
-        self.screen = screen
-        self.clock = pg.time.Clock()
-        self.dt = 0
+# class Game:
+#     def __init__(self, screen:pg.surface.Surface) -> None:
+#         self.stateStack: list[State] = []
+#         self.WIN_WIDTH = WIN_WIDTH
+#         self.WIN_HEIGHT = WIN_HEIGHT
+#         self.screen = screen
+#         self.clock = pg.time.Clock()
+#         self.dt = 0
 
-    def enterState(self, nextState: State):
-        self.stateStack.append(nextState)
+#     def enterState(self, nextState: State):
+#         self.stateStack.append(nextState)
 
-    def run(self):
-        #MARK: Main game loop
-        running = True
-        while running:
-            if pg.event.get(pg.QUIT):
-                running = False
-            self.stateStack[-1].process(pg.event.get())
-            self.stateStack[-1].update()
-            self.stateStack[-1].render()
+#     def run(self):
+#         #MARK: Main game loop
+#         running = True
+#         while running:
+#             if pg.event.get(pg.QUIT):
+#                 running = False
+#             self.stateStack[-1].process(pg.event.get())
+#             self.stateStack[-1].update()
+#             self.stateStack[-1].render()
 
-            self.clock.tick(60)
-            pg.display.flip()
-            self.screen.fill("black")
+#             self.clock.tick(60)
+#             pg.display.flip()
+#             self.screen.fill("black")
 
-        pg.quit()
+#         pg.quit()
 
 
-game = Game(screen)
+# game = Game(screen)
 def fa():
     print("option 1 pressed")
 def fb():
@@ -77,12 +78,9 @@ bigMap.setOffset(cameraOffset)
 
 lvlState = LevelState(bigMap, [player, enemy1, testContainer], [player, enemy1], player)
 
-#turnState = TurnControl(game, bigMap, player, [enemy1], [], [])
 expState = Exploration(game, lvlState, player)
 expState.eventQ = eventQ
-# invState = InventoryMenu(game, bigMap, player, [enemy1], [], [])
-# grenadeState = Exploration.GrenadeTargeting(game, bigMap, player, [enemy1], [], [enemy1, player])
-#transitionState = ExplorationTurnTransition(game, bigMap, player, [enemy1], [], [enemy1, player])
+
 startMenu = StartMenu(game, expState)
 
 print(bigMap.getFullCover())

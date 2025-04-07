@@ -92,10 +92,7 @@ class Exploration(State):
         self.UIbox.topright = screenRect.topright
 
         launchInventory = lambda : self.game.stateStack.append(
-            InventoryMenu(self.game,
-                          self.levelState.tileMap,
-                          self.player, 
-                          [],[],[])
+            InventoryMenu(self.game, self.levelState)
             )
         self.inventoryButton = Button(TextImg("Inventory").image,launchInventory)
         self.inventoryButton.rect.topleft = self.UIbox.topleft
@@ -239,9 +236,8 @@ class Exploration(State):
                     if isinstance(entity, Container): 
                         interactAction.availableButton.callback = lambda : self.game.stateStack.append(
                         InventoryMenu(self.game,
-                                    self.levelState.tileMap,
-                                    self.player, 
-                                    [],[],[], activeContainer=entity)
+                                    self.levelState,
+                                    activeContainer=entity)
                         )
 
                     if entity.canInteract(self.levelState, self.player):

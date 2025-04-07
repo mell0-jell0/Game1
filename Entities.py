@@ -23,7 +23,7 @@ class MapEntity(pg.sprite.Sprite):
     def __init__(self, image, rect, eventQ: deque):
         pg.sprite.Sprite.__init__(self)
         self.image = image
-        self.rect = rect
+        self.rect: pg.rect.Rect = rect
         self.tileLocation = (0,0)
 
         self.defaultInteraction = None
@@ -37,17 +37,17 @@ class MapEntity(pg.sprite.Sprite):
 
 
 class MultiTurnAction:
-    def __init__(self, skippable, progress, limit, onFinish = lambda: print("onFinish not implemented")) -> None:
+    def __init__(self, skippable, turnCost, onFinish = lambda: print("onFinish not implemented")) -> None:
         self.skippable = skippable
-        self.progress = progress
-        self.limit = limit
+        self.progress = 0
+        self.turnCost= turnCost
         self.finished = False
         self.onFinish = onFinish
     
     def update(self):
         '''Updates progess of action by 1 turn'''
         self.progress+=1
-        if self.progress >= self.limit:
+        if self.progress >= self.turnCost:
             self.finished = True
             self.onFinish()
 
@@ -71,7 +71,7 @@ class LevelState:
         self.tileMap: GameMap = tileMap
         self.entities: list[MapEntity] = entities
         self.turnTakers: list[TurnTaker] = turnTakers
-        self.playerCharacter = playerCharacter
+        self.player: Player = playerCharacter
 
 class Attackable:
     '''
@@ -149,7 +149,7 @@ class BasicEnemy(MapEntity, Interactable, TurnTaker):
         # attempts to attack the player if in sight. Otherwise wanders around
         # how do characters know if a tile is occupied?
         for entity in levelState.entities:
-            if entity == levelState.playerCharacter:
+            if entity == levelState.player:
                 print("we want to attack character")
                 shotgun = testWeapon
                 shotgun.resolveAttack(self, entity, levelState, animationSet)

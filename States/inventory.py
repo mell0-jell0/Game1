@@ -1,14 +1,10 @@
 from States.states import *
+from Entities import *
 
 class InventoryMenu(State):
-    def __init__(self, game, tileMap: GameMap, player: Player, enemies: list, friendlies: list, interactables: list, activeContainer: Container | None = None):
+    def __init__(self, game, levelState: LevelState, activeContainer: Container | None = None):
         self.game = game
-        self.tileMap = tileMap
-        self.player = player
-        self.allTurnTakers = [player]   
-        for turnTaker in enemies:
-            self.allTurnTakers.append(turnTaker)
-        self.interactables = interactables
+        self.levelState = levelState
 
         self.menuRegion = pg.rect.Rect(0, 0, game.WIN_WIDTH // 2, game.WIN_HEIGHT)
         self.menuRegion.topright = game.screen.get_rect().topright
@@ -27,18 +23,23 @@ class InventoryMenu(State):
             self.activePopup = None
         else:
             #check for an item click
-            for invItem in self.player.inventory:
+            for invItem in self.levelState.player.inventory:
                 if invItem.rect.collidepoint(pos):
                     popupButtons = []
                     print("Should iterate over properties of weapon to generate more popup items")
                     if self.activeContainer != None:
                         def moveItem():
                             print("moving item to container")
-                            self.player.inventory.remove(invItem)
+                            self.levelState.player.inventory.remove(invItem)
                             self.activeContainer.items.append(invItem)
 
                         popupButtons.append(
                             Button(TextImg("Transfer").image, moveItem)
+                        )
+
+                    if isinstance(invItem, Useable):
+                        popupButtons.append(
+                            Button(TextImg("Use").image, lambda: invItem.use(self.game, self.levelState))
                         )
 
                     popupButtons.append(
@@ -56,7 +57,7 @@ class InventoryMenu(State):
         for item in self.activeContainer.items:
             if item.rect.collidepoint(pos):
                 print("We should put item from container into inventory and go to next turn")
-                self.player.inventory.append(item)
+                self.levelState.player.inventory.append(item)
                 self.activeContainer.items.remove(item)
                 break
         
@@ -73,8 +74,8 @@ class InventoryMenu(State):
 
 
     def update(self):
-        for character in self.allTurnTakers:
-            character.rect.topleft = self.tileMap.tileToPixel(character.tileLocation)
+        for entity in self.levelState.entities:
+            entity.rect.topleft = self.levelState.tileMap.tileToPixel(entity.tileLocation)
 
         # Check for interactions with the container        
         if self.activeContainer == None: return
@@ -82,6 +83,12 @@ class InventoryMenu(State):
         yOffset = TextImg("test").image.get_rect().height
         for item in self.activeContainer.items:
             item.rect.topleft = (0, yOffset)
+            yOffset += item.image.get_rect().height
+        
+        yOffset = TextImg("test").image.get_rect().height
+        xVal = self.menuRegion.topleft[0]
+        for item in self.levelState.player.inventory:
+            item.rect.topleft = (xVal, yOffset)
             yOffset += item.image.get_rect().height
 
         if self.activePopup == None: return
@@ -95,10 +102,8 @@ class InventoryMenu(State):
 
     def render(self):
         #render all the stuff from the background
-        self.tileMap.draw(self.game.screen)
-        for character in self.allTurnTakers:
-            self.game.screen.blit(character.image, character.rect)
-        
+        drawLevelState(self.levelState, self.game.screen)
+
         #render the menu background
         self.game.screen.blit(self.img, self.menuRegion)
 
@@ -109,10 +114,10 @@ class InventoryMenu(State):
         self.game.screen.blit(equippedText.image, equippedText.rect)
         yDisplacement+= equippedText.rect.height
         
-        if self.player.equipped != None:
-            self.player.equipped.rect.topleft = equippedText.rect.bottomleft
-            self.game.screen.blit(self.player.equipped.image, self.player.equipped.rect)
-            yDisplacement += self.player.equipped.rect.height
+        if self.levelState.player.equipped != None:
+            self.levelState.player.equipped.rect.topleft = equippedText.rect.bottomleft
+            self.game.screen.blit(self.levelState.player.equipped.image, self.levelState.player.equipped.rect)
+            yDisplacement += self.levelState.player.equipped.rect.height
         
         #divider between equipped and rest
         lineWidth = 4
@@ -124,19 +129,23 @@ class InventoryMenu(State):
 
 
         #render the other items
-        for item in self.player.inventory:
-            if item == self.player.equipped: continue
-            item.rect.topleft = (self.menuRegion.topleft[0], self.menuRegion.topleft[1] + yDisplacement)
-            yDisplacement += item.rect.height
+        for item in self.levelState.player.inventory:
+            if item == self.levelState.player.equipped: continue
             self.game.screen.blit(item.image, item.rect)
+            # item.rect.topleft = (self.menuRegion.topleft[0], self.menuRegion.topleft[1] + yDisplacement)
+            # yDisplacement += item.rect.height
+            # self.game.screen.blit(item.image, item.rect)
         
         #render the active popup
         if self.activePopup != None:
+            x,y = self.activePopup.anchor
             for button in self.activePopup.buttons:
+                button.rect.topleft = x,y
                 self.game.screen.blit(
                     button.image,
                     button.rect
                 ) 
+                y += button.image.get_rect().height
 
         # If interacting with container, draw its contents/menu
         if self.activeContainer == None: return

@@ -9,8 +9,8 @@ class TurnAction:
     '''
     def __init__(self, resolutionEffect, turnCost: int, interruptable) -> None:
         self.resolutionEffect = resolutionEffect
-        self.turnCost = turnCost
-        self.interruptable = interruptable
+        self.turnCost: int = turnCost
+        self.interruptable: bool = interruptable
 
 class EntityAction:
     '''

@@ -3,6 +3,7 @@ from abc import ABC
 from Entities import Attackable, LevelState
 from utility import *
 from gameMap import *
+from action import *
 
 
 class Item(pg.sprite.Sprite):
@@ -16,15 +17,50 @@ class Item(pg.sprite.Sprite):
 
 #if its a weapon it can deal damage and needs to handle that kind of logic
 
-from Entities import MapEntity, LevelState, Attackable
+from Entities import MapEntity, LevelState, Attackable, TurnTaker, MultiTurnAction
+from States.states import State, drawLevelState
 
-class MedKit(Item):
+class Useable(Item):
+    '''Item type that can be used in the inventory'''
+    def __init__(self, imgName, type, description="generic item") -> None:
+        super().__init__(imgName, type, description)
+
+    def use(self, game, levelState: LevelState):
+        print(f"Use not implemented for item {self}")
+
+
+class MedkitState(State):
+    def __init__(self, game, levelState: LevelState) -> None:
+        super().__init__(game)
+        self.levelState = levelState
+    
+    def render(self):
+        super().render()
+        drawLevelState(self.levelState, self.game.screen)
+        tileMap = self.levelState.tileMap
+        player = self.levelState.player
+
+        for entity in self.levelState.entities:
+            if entity.rect.collidepoint(pg.mouse.get_pos()):
+                color = "grey"
+                if tileMap.calcDistance(player.tileLocation, entity.tileLocation) == 1:
+                    color = "green"
+                
+                pg.draw.circle(self.game.screen, color, entity.rect.center, tileMap.TILE_WIDTH,2)
+
+
+class MedKit(Useable):
     def __init__(self, imgName, type):
         super().__init__(imgName, type, "basic med kit")
-    def use(self, target):
-        assert(hasattr("Attackable", target))
-        target.attackable.hp+=3
-        print("Just healed target for 3 damage")
+
+    def use(self, game, levelState: LevelState):
+        game.stateStack.pop()
+        game.stateStack.append(MedkitState(game, levelState))
+        # assert(hasattr("Attackable", target))
+        # assert(isinstance(target, TurnTaker))
+        # def effect(): target.attackable.hp += 3
+        # print(f"Adding healing turnaction to {target}")
+        # target.currentAction = MultiTurnAction(False, 2, effect)
 
 class Weapon(Item):
     '''asbtract class for weapon types so that they can be equipped'''
