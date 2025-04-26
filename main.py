@@ -21,37 +21,6 @@ SplatterCat for exploring the niche world of indie games and convincing me that 
 My friend A. for convincing me to get started and keeping me accountable by asking how "the game" was coming along
 '''
             
-
-# TODO: rework the game object so that autocomplete works and shared pygame state is easily and elegantly accessible
-# class Game:
-#     def __init__(self, screen:pg.surface.Surface) -> None:
-#         self.stateStack: list[State] = []
-#         self.WIN_WIDTH = WIN_WIDTH
-#         self.WIN_HEIGHT = WIN_HEIGHT
-#         self.screen = screen
-#         self.clock = pg.time.Clock()
-#         self.dt = 0
-
-#     def enterState(self, nextState: State):
-#         self.stateStack.append(nextState)
-
-#     def run(self):
-#         #MARK: Main game loop
-#         running = True
-#         while running:
-#             if pg.event.get(pg.QUIT):
-#                 running = False
-#             self.stateStack[-1].process(pg.event.get())
-#             self.stateStack[-1].update()
-#             self.stateStack[-1].render()
-
-#             self.clock.tick(60)
-#             pg.display.flip()
-#             self.screen.fill("black")
-
-#         pg.quit()
-
-
 # game = Game(screen)
 def fa():
     print("option 1 pressed")
