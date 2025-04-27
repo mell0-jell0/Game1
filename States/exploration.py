@@ -1,10 +1,10 @@
 import enum
 from States.states import *
 from States.inventory import *
+import subState
 from gameMap import *
 from Entities import *
 from action import *
-
 
 
 
@@ -129,6 +129,9 @@ class Exploration(State):
         #Constant/persistent animations tied to entities
         # setting gameplayPause to a value other than 0 will induce a pause in *gameplay* logic for that many ms. (i.e.Animations and technical processing should continue but AI should not take turns etc.)
         self.gameplayPause = 0
+
+        # Substate tracking
+        self.substate: subState.State | None = None
     
     def nextTurn(self):
         '''
@@ -192,6 +195,7 @@ class Exploration(State):
                 if len(totalPath) < 1: return
                 assert(len(totalPath) > 1)
 
+                if self.levelState.turnTakers[self.turnTakerIndex] != self.player : return                
                 #Leapfrog along path and split it into chunks 4 nodes or less
                 startIndex = 0
                 endIndex = 0
@@ -264,6 +268,8 @@ class Exploration(State):
     def process(self, events: list[pg.event.Event]):
         for event in events:
             #If it is the players turn, then process their types of inputs
+            if self.substate != None:
+                pass
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT: #Click was made
                 self.handleLeftClick(event)
             if event.type == pg.KEYDOWN and event.key == pg.K_d: print(f"Pathchain is : {self.pathChain}")
@@ -406,7 +412,8 @@ class Exploration(State):
                 left, top = self.levelState.tileMap.tileToPixel(entity.tileLocation)
                 rect = pg.rect.Rect(left, top, self.levelState.tileMap.TILE_WIDTH, self.levelState.tileMap.TILE_WIDTH)
                 if rect.collidepoint(pg.mouse.get_pos()):
-                    self.player.equipped.drawUI(self.player, entity, self.levelState, self.game.screen)
+                    if self.player.equipped != None:
+                        self.player.equipped.drawUI(self.player, entity, self.levelState, self.game.screen)
 
 
     class GrenadeTargeting(State):

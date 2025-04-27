@@ -73,11 +73,11 @@ class StartMenu(State):
         self.game.screen.fill("black")
         self.game.screen.blit(self.playButton.image, self.playButton.rect)
 
-class MedkitTargeting(State):
-    def __init__(self, game, levelState: LevelState) -> None:
-        super().__init__(game)
-        self.levelState = levelState
+# class MedkitTargeting(State):
+#     def __init__(self, game, levelState: LevelState) -> None:
+#         super().__init__(game)
+#         self.levelState = levelState
 
-    def render(self):
-        drawLevelState(self.levelState, self.game.screen)
-        return super().render()
+#     def render(self):
+#         drawLevelState(self.levelState, self.game.screen)
+#         return super().render()

@@ -29,26 +29,7 @@ class Useable(Item):
         print(f"Use not implemented for item {self}")
 
 
-class MedkitState(State):
-    def __init__(self, game, levelState: LevelState) -> None:
-        super().__init__(game)
-        self.levelState = levelState
-    
-    def render(self):
-        super().render()
-        drawLevelState(self.levelState, self.game.screen)
-        tileMap = self.levelState.tileMap
-        player = self.levelState.player
-
-        for entity in self.levelState.entities:
-            if entity.rect.collidepoint(pg.mouse.get_pos()):
-                color = "grey"
-                if tileMap.calcDistance(player.tileLocation, entity.tileLocation) == 1:
-                    color = "green"
-                
-                pg.draw.circle(self.game.screen, color, entity.rect.center, tileMap.TILE_WIDTH,2)
-
-
+from subState import MedkitState
 class MedKit(Useable):
     def __init__(self, imgName, type):
         super().__init__(imgName, type, "basic med kit")

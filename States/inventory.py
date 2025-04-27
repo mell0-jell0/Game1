@@ -79,13 +79,15 @@ class InventoryMenu(State):
 
         # Check for interactions with the container        
         if self.activeContainer == None: return
+        textHeight = TextImg("test").image.get_rect().height
 
-        yOffset = TextImg("test").image.get_rect().height
+        initialYOffset = textHeight
+        yOffset = initialYOffset
         for item in self.activeContainer.items:
             item.rect.topleft = (0, yOffset)
             yOffset += item.image.get_rect().height
         
-        yOffset = TextImg("test").image.get_rect().height
+        yOffset = textHeight + self.levelState.player.equipped.image.get_rect().height
         xVal = self.menuRegion.topleft[0]
         for item in self.levelState.player.inventory:
             item.rect.topleft = (xVal, yOffset)
@@ -159,7 +161,8 @@ class InventoryMenu(State):
 
         for item in self.activeContainer.items:
             self.game.screen.blit(item.image, item.rect)
-            print(f"Drawing item {item}") 
+        #     print(f"Drawing item {item}") 
+
         # Draw UI when hovering over item in container
         text = TextImg("Take (1 Turn)", size=15)
         for item in self.activeContainer.items:

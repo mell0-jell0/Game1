@@ -26,4 +26,4 @@ TODO: add camera panning (should be easy to do with tilemap offset? ui would sta
 TODO: add more weapons
 
 TODO: make drawing consistent. have sprite rects update consistently and then draw based off rect position.
-TODO: based on above, fix the way inventory draws items.
+TODO: factor out common functionality into function calls. I.e. drawing healthbar or basic UI elements that should persist across states
